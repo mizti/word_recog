@@ -6,6 +6,7 @@
 import sys
 import random
 import numpy as np
+import string
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
@@ -33,41 +34,30 @@ class FontImageDataset(chainer.dataset.DatasetMixin):
 
 	def generate_image(self):
 		fonts = [
-		    'font_files/Helvetica.ttf',
-		    'font_files/BodoniSvtyTwoITCTT-Book.ttf'
+			'HelveticaNeueDeskInterface.ttc',
+			'Bodoni 72.ttc'
 		]
 		label = random.randint(0,len(fonts)-1)
 		fontFile = fonts[label]
 		font = ImageFont.truetype(fontFile, 60)
 		
-		train_characters = [
-			'A','B','C','D','E','F','G','H','I','J','K','L','M', 
-			'a','b','c','d','e','f','g','h','i','j','k','l','m'
-		]
-		test_characters  = [
-			'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-			'n','o','p','q','r','s','t','u','v','w','x','y','z'
-		]
-		text = ''
+		length = 6
+		text = self.generate_random_string(length)
+		print(text)
 
-		if self._train:
-			text = random.choice(train_characters)
-		else:
-			text = random.choice(test_characters)
-		
-		w, h = 64, 64
+		w, h = 64 * length, 64
 		text_w, text_h = font.getsize(text)
-		text_x, text_y = (w - text_w) * random.random(), (h - text_h) * random.random()
+		#text_x, text_y = (w - text_w) * random.random(), (h - text_h) * random.random()
+		text_x, text_y = (w - text_w) * 0, (h - text_h) * random.random()
 		
 		im = Image.new('L', (w, h), 255)
 		draw = ImageDraw.Draw(im)
 		draw.text((text_x, text_y), text, fill=(0), font=font)
-		#im.save('image' + str(random.randint(0, 100)) + '.png')
-		
-		#if self._train:
-		#	im.save('temp/image_train' + str(random.randint(0, 100)) + '.png')
-		#else:
-		#	im.save('temp/image_test' + str(random.randint(0, 100)) + '.png')
+	
+		if self._train:
+			im.save('temp/image_train' + str(random.randint(0, 100)) + '.png')
+		else:
+			im.save('temp/image_test' + str(random.randint(0, 100)) + '.png')
 
 		image_array = np.asarray(im)
 		
@@ -85,3 +75,8 @@ class FontImageDataset(chainer.dataset.DatasetMixin):
 	def get_example(self, i):
 		image_array, label = self._pairs[i][0], self._pairs[i][1]
 		return image_array, label
+
+	def generate_random_string(self, size=6, chars=string.ascii_uppercase + string.digits):
+		return ''.join(random.choice(chars) for _ in range(size))
+		
+train_data = FontImageDataset(10, train=True) 
