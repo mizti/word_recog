@@ -6,10 +6,10 @@ from chainer import Link, Chain, ChainList
 import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
-from font_image_dataset import *
+from text_image_dataset import *
 
-train_data = FontImageDataset(1000, train=True) # returns 64 x 64 ndarray, 
-test_data = FontImageDataset(1000, train=False)
+train_data = TextImageDataset(1000, train=True) # returns 64 x 64 ndarray, 
+test_data = TextImageDataset(1000, train=False)
 train_iter = iterators.SerialIterator(train_data, batch_size=20, shuffle=True)
 test_iter = iterators.SerialIterator(test_data, batch_size=20, repeat=False, shuffle=False)
 
