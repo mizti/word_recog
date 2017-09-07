@@ -36,43 +36,15 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		# generate text
 		length = 6
 		text = self.generate_random_string(length)
-		print(text)
+		#print(text)
 
 		# text to image
-		fonts = [
-			'HelveticaNeueDeskInterface.ttc',
-			'Bodoni 72.ttc'
-		]
-		fontFile = fonts[random.randint(0,len(fonts)-1)]
-		font = ImageFont.truetype(fontFile, 60)
-		
-		w, h = 64 * length, 64
-		text_w, text_h = font.getsize(text)
-		#text_x, text_y = (w - text_w) * random.random(), (h - text_h) * random.random()
-		text_x, text_y = (w - text_w) * 0, (h - text_h) * random.random()
-		
-		im = Image.new('L', (w, h), 255)
-		draw = ImageDraw.Draw(im)
-		draw.text((text_x, text_y), text, fill=(0), font=font)
-	
-		if self._train:
-			im.save('temp/image_train' + str(random.randint(0, 100)) + '.png')
-		else:
-			im.save('temp/image_test' + str(random.randint(0, 100)) + '.png')
-
-		image_array = np.asarray(im)
-		
-		if self._normalize:
-		    image_array = image_array / np.max(image_array)
-		
-		if self._flatten:
-			image_array = image_array.flatten()
-		image_array = image_array.astype('float32')
+		image_array = self.text_to_image(text)
 
 		# text to label
 		label = self.text_to_array(text)
-		print(label)
-		return image_array, label
+		#return image_array, label
+		return image_array, label[0]
 
 	def get_example(self, i):
 		image_array, label = self._pairs[i][0], self._pairs[i][1]
@@ -97,5 +69,39 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 				ascii_code = ascii_code - 54
 			label[index, ascii_code] = 1
 		return np.int32(label)
+
+	def text_to_image(self, text):
+		# text to image
+		fonts = [
+			'HelveticaNeueDeskInterface.ttc',
+			'Bodoni 72.ttc'
+		]
+		fontFile = fonts[random.randint(0,len(fonts)-1)]
+		font = ImageFont.truetype(fontFile, 60)
+		
+		w, h = 64 * len(text), 64
+		text_w, text_h = font.getsize(text)
+		#text_x, text_y = (w - text_w) * random.random(), (h - text_h) * random.random()
+		text_x, text_y = (w - text_w) * 0, (h - text_h) * random.random()
+		
+		im = Image.new('L', (w, h), 255)
+		draw = ImageDraw.Draw(im)
+		draw.text((text_x, text_y), text, fill=(0), font=font)
+	
+		if self._train:
+			im.save('temp/image_train' + str(random.randint(0, 100)) + '.png')
+		else:
+			im.save('temp/image_test' + str(random.randint(0, 100)) + '.png')
+
+		image_array = np.asarray(im)
+		
+		if self._normalize:
+		    image_array = image_array / np.max(image_array)
+		
+		if self._flatten:
+			image_array = image_array.flatten()
+		image_array = image_array.astype('float32')
+
+		return image_array
 		
 train_data = TextImageDataset(10, train=True) 
