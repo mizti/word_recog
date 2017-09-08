@@ -54,7 +54,7 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		return ''.join(random.choice(chars) for _ in range(size))
 
 	def text_to_label(self, text):
-		label = np.zeros((len(text), 37)) # 37character type number
+		label = [] #np.zeros((len(text), 37)) # 37character type number
 		for index, c in enumerate(text):
 			ascii_code = ord(c)
 			# 0~9: number / 10: space / 11~36: upper case
@@ -67,7 +67,8 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 			elif (ascii_code >=65 and ascii_code <= 90):
 				# print("upper case")
 				ascii_code = ascii_code - 54
-			label[index, ascii_code] = 1
+			label.append(ascii_code)
+		label = np.asarray(label)
 		return label.astype('int32')
 
 	def text_to_image(self, text):
