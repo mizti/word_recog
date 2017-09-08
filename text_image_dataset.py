@@ -19,7 +19,7 @@ import chainer.links as L
 from chainer.training import extensions
 
 class TextImageDataset(chainer.dataset.DatasetMixin):
-	def __init__(self, datanum=10, normalize=True, flatten=True, train=True):
+	def __init__(self, datanum=10, normalize=True, flatten=False, train=True):
 		self._normalize = normalize
 		self._flatten = flatten
 		self._train = train
@@ -42,8 +42,8 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		image_array = self.text_to_image(text)
 
 		# text to label
-		label = self.text_to_array(text)
-		#return image_array, label
+		label = self.text_to_label(text)
+		#return image_label, label
 		return image_array, label[0]
 
 	def get_example(self, i):
@@ -53,7 +53,7 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 	def generate_random_string(self, size=6, chars=string.ascii_uppercase + string.digits + ' '):
 		return ''.join(random.choice(chars) for _ in range(size))
 
-	def text_to_array(self, text):
+	def text_to_label(self, text):
 		label = np.zeros((len(text), 37)) # 37character type number
 		for index, c in enumerate(text):
 			ascii_code = ord(c)
@@ -68,7 +68,7 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 				# print("upper case")
 				ascii_code = ascii_code - 54
 			label[index, ascii_code] = 1
-		return np.int32(label)
+		return label.astype('int32')
 
 	def text_to_image(self, text):
 		# text to image
@@ -84,9 +84,11 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		#text_x, text_y = (w - text_w) * random.random(), (h - text_h) * random.random()
 		text_x, text_y = (w - text_w) * 0, (h - text_h) * random.random()
 		
-		im = Image.new('L', (w, h), 255)
+		#im = Image.new('L', (w, h), 255)
+		im = Image.new('RGB', (w, h), (255,255,255))
 		draw = ImageDraw.Draw(im)
-		draw.text((text_x, text_y), text, fill=(0), font=font)
+		#draw.text((text_x, text_y), text, fill=(0), font=font)
+		draw.text((text_x, text_y), text, fill=(0,100,80), font=font)
 	
 		if self._train:
 			im.save('temp/image_train' + str(random.randint(0, 100)) + '.png')
@@ -101,7 +103,7 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		if self._flatten:
 			image_array = image_array.flatten()
 		image_array = image_array.astype('float32')
-
+		image_array = image_array.transpose(2, 1, 0) #HWC to CHW
 		return image_array
 		
 train_data = TextImageDataset(10, train=True) 
