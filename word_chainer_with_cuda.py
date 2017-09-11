@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import chainer
+import argparse
 from chainer import cuda, Function, gradient_check, report, training, utils, Variable
 from chainer import datasets, iterators, optimizers, serializers
 from chainer import Link, Chain, ChainList
@@ -19,7 +20,7 @@ class CNN(Chain):
             norm2 = L.BatchNormalization(128),
             conv3 = L.Convolution2D(in_channels=128, out_channels=256, ksize=3, stride=1, pad=1), 
             norm3 = L.BatchNormalization(256),
-            l1 = L.Linear(98304, 4096),
+            l1 = L.Linear(24576, 4096),
             l2 = L.Linear(4096, 37) 
         )
 
@@ -51,27 +52,27 @@ if __name__ == '__main__':
       #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
   
-train_data = TextImageDataset(100000, train=True)
-test_data = TextImageDataset(100000, train=False)
-train_iter = iterators.SerialIterator(train_data, batch_size=500, shuffle=True)
-test_iter = iterators.SerialIterator(test_data, batch_size=500, repeat=False, shuffle=False)
+train_data = TextImageDataset(10000, train=True, device=args.gpu)
+test_data = TextImageDataset(1000, train=False, device=args.gpu)
+train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
+test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
 
+model = CNN()
 if args.gpu >= 0:
     chainer.cuda.get_device(args.gpu).use()
     model = CNN().to_gpu()
-#model = CNN().to_cpu()
 optimizer = optimizers.SGD()
 
 optimizer.setup(model)
 
-updater = training.StandardUpdater(train_iter, optimizer)
-#updater = training.StandardUpdater(train_iter, optimizer, device=0)
+#updater = training.StandardUpdater(train_iter, optimizer)
+updater = training.StandardUpdater(train_iter, optimizer, device=0)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
 
 print("start running")
-trainer.extend(extensions.Evaluator(test_iter, model))
-#trainer.extend(extensions.Evaluator(test_iter, model, device=0))
+#trainer.extend(extensions.Evaluator(test_iter, model))
+trainer.extend(extensions.Evaluator(test_iter, model, device=0))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'main/accuracy', 'validation/main/accuracy']))
 trainer.extend(extensions.ProgressBar())

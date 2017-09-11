@@ -19,10 +19,11 @@ import chainer.links as L
 from chainer.training import extensions
 
 class TextImageDataset(chainer.dataset.DatasetMixin):
-	def __init__(self, datanum=10, normalize=True, flatten=False, train=True):
+	def __init__(self, datanum=10, normalize=True, flatten=False, train=True, device=-1):
 		self._normalize = normalize
 		self._flatten = flatten
 		self._train = train
+		self._device = device
 		pairs = []
 		for _ in range(datanum):
 			image_array, label = self.generate_data()
@@ -68,8 +69,10 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 				# print("upper case")
 				ascii_code = ascii_code - 54
 			label.append(ascii_code)
-		label = np.asarray(label)
-		return label.astype('int32')
+		label = np.asarray(label).astype('int32')
+		if self._device >= 0:
+			label = chainer.cuda.to_gpu(label)
+		return label
 
 	def text_to_image(self, text):
 		# text to image
@@ -82,9 +85,10 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 			'Times New Roman.ttf'
 		]
 		fontFile = fonts[random.randint(0,len(fonts)-1)]
-		font = ImageFont.truetype('data/'+fontFile, 60)
-		
-		w, h = 64 * len(text), 64
+		font = ImageFont.truetype('data/'+fontFile, 30)
+
+		#size	
+		w, h = 32 * len(text), 32
 		text_w, text_h = font.getsize(text)
 		#text_x, text_y = (w - text_w) * random.random(), (h - text_h) * random.random()
 		text_x, text_y = (w - text_w) * 0, (h - text_h) * random.random()
@@ -109,6 +113,8 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 			image_array = image_array.flatten()
 		image_array = image_array.astype('float32')
 		image_array = image_array.transpose(2, 1, 0) #HWC to CHW
+		if self._device >= 0:
+			image_array = chainer.cuda.to_gpu(image_array)
 		return image_array
 		
 train_data = TextImageDataset(10, train=True) 
