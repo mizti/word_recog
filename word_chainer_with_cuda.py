@@ -40,21 +40,32 @@ class CNN(Chain):
         report({'loss': loss, 'accuracy': accuracy}, self)
         return loss
 
-train_data = TextImageDataset(100, train=True)
-test_data = TextImageDataset(100, train=False)
-train_iter = iterators.SerialIterator(train_data, batch_size=5, shuffle=True)
-test_iter = iterators.SerialIterator(test_data, batch_size=5, repeat=False, shuffle=False)
+if __name__ == '__main__':
+      parser = argparse.ArgumentParser()
+      parser.add_argument('--gpu', '-g', type=int, default=-1, help='GPU ID (negative value indicates CPU)')
+      parser.add_argument('--model_snapshot', '-m', default=None, help='Filename of model snapshot')
+      parser.add_argument('--output', '-o', default='result', help='Sampling iteration for each test data')
+      #parser.add_argument('--data_dir', '-d', default='data', help='directory of pretrain models and image data')
+      #parser.add_argument('--net', '-n', default='GoogLeNet', help='Choose network to use for prediction')
+      #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
+      args = parser.parse_args()
+  
+train_data = TextImageDataset(100000, train=True)
+test_data = TextImageDataset(100000, train=False)
+train_iter = iterators.SerialIterator(train_data, batch_size=500, shuffle=True)
+test_iter = iterators.SerialIterator(test_data, batch_size=500, repeat=False, shuffle=False)
 
-#chainer.cuda.get_device(0).use()
-#model = CNN().to_gpu()
-model = CNN().to_cpu()
+if args.gpu >= 0:
+    chainer.cuda.get_device(args.gpu).use()
+    model = CNN().to_gpu()
+#model = CNN().to_cpu()
 optimizer = optimizers.SGD()
 
 optimizer.setup(model)
 
 updater = training.StandardUpdater(train_iter, optimizer)
 #updater = training.StandardUpdater(train_iter, optimizer, device=0)
-trainer = training.Trainer(updater, (500, 'epoch'), out='result')
+trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
 
 print("start running")
