@@ -95,10 +95,10 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		#draw.text((text_x, text_y), text, fill=(0), font=font)
 		draw.text((text_x, text_y), text, fill=(0,100,80), font=font)
 	
-		if self._train:
-			im.save('result/image_train' + str(random.randint(0, 100)) + '.png')
-		else:
-			im.save('result/image_test' + str(random.randint(0, 100)) + '.png')
+		#if self._train:
+		#	im.save('result/image_train' + str(random.randint(0, 100)) + '.png')
+		#else:
+		#	im.save('result/image_test' + str(random.randint(0, 100)) + '.png')
 
 		image_array = np.asarray(im)
 		
