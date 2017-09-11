@@ -37,11 +37,11 @@ class CNN(Chain):
         print(t)
         print(t.shape)
         print(t.__class__)
-        h = self.predict(x)
+        y = self.predict(x)
         print(h)
         print(h.shape)
         print(h.__class__)
-        loss = F.softmax_cross_entropy(h, t)
+        loss = F.softmax_cross_entropy(y, t)
         accuracy = F.accuracy(y, t)
         report({'loss': loss, 'accuracy': accuracy}, self)
         return loss
