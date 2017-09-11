@@ -74,11 +74,15 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 	def text_to_image(self, text):
 		# text to image
 		fonts = [
+			'Arial Rounded Bold.ttf',
+			'Avenir.ttc',
+			'Bodoni 72.ttc',
+			'GillSans.ttc',
 			'HelveticaNeueDeskInterface.ttc',
-			'Bodoni 72.ttc'
+			'Times New Roman.ttf'
 		]
 		fontFile = fonts[random.randint(0,len(fonts)-1)]
-		font = ImageFont.truetype(fontFile, 60)
+		font = ImageFont.truetype('data/'+fontFile, 60)
 		
 		w, h = 64 * len(text), 64
 		text_w, text_h = font.getsize(text)
@@ -92,9 +96,9 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		draw.text((text_x, text_y), text, fill=(0,100,80), font=font)
 	
 		if self._train:
-			im.save('temp/image_train' + str(random.randint(0, 100)) + '.png')
+			im.save('result/image_train' + str(random.randint(0, 100)) + '.png')
 		else:
-			im.save('temp/image_test' + str(random.randint(0, 100)) + '.png')
+			im.save('result/image_test' + str(random.randint(0, 100)) + '.png')
 
 		image_array = np.asarray(im)
 		

@@ -7,3 +7,7 @@ __pycache__/*
 temp
 result/log
 .python-version
+result
+data
+result/*
+data/*
