@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import chainer
 from chainer import cuda, Function, gradient_check, report, training, utils, Variable
