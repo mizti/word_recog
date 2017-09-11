@@ -20,8 +20,7 @@ class CNN(Chain):
             norm2 = L.BatchNormalization(128),
             conv3 = L.Convolution2D(in_channels=128, out_channels=256, ksize=3, stride=1, pad=1), 
             norm3 = L.BatchNormalization(256),
-            l1 = L.Linear(24576, 4096),
-            l2 = L.Linear(4096, 37) 
+            l1 = L.Linear(24576, 4096)
         )
 
     def predict(self, x):
@@ -32,7 +31,16 @@ class CNN(Chain):
         h = F.relu(self.norm3(self.conv3(h)))
         h = F.max_pooling_2d(h, 2)
         h = F.relu(self.l1(h))
-        y = self.l2(h)
+        return y
+
+class Classifier(Chain):
+    def __init__(self):
+        super(Classifier, self).__init__(
+            linear = L.Linear(4096,37) 
+        )
+
+    def predict(self, x):
+        y = self.linear(x)
         return y
 
     def __call__(self, x, t):
@@ -57,7 +65,8 @@ test_data = TextImageDataset(1000, train=False, device=args.gpu)
 train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
 test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
 
-model = CNN()
+base = CNN()
+model = Classifier(base)
 if args.gpu >= 0:
     chainer.cuda.get_device(args.gpu).use()
     model = CNN().to_gpu()
