@@ -8,7 +8,8 @@ from chainer import Link, Chain, ChainList
 import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
-from text_image_dataset import *
+from lib.text_image_dataset import *
+from lib.word_recog_updater import *
 
 class CNN(Chain):
     def __init__(self):
@@ -45,14 +46,12 @@ class CNN(Chain):
 
 
 class Classifier(Chain):
-    def __init__(self, base_cnn):
+    def __init__(self):
         super(Classifier, self).__init__(
-            base_cnn = base_cnn,
             linear = L.Linear(4096,37) 
         )
 
     def predict(self, x):
-        h = self.base_cnn(x)
         y = self.linear(h)
         return y
 
@@ -73,21 +72,29 @@ if __name__ == '__main__':
       #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
   
-train_data = TextImageDataset(10000, train=True, device=args.gpu)
-test_data = TextImageDataset(1000, train=False, device=args.gpu)
+train_data = TextImageDataset(100, train=True, device=args.gpu)
+test_data = TextImageDataset(100, train=False, device=args.gpu)
 train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
 test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
 
 base_cnn = CNN()
-model = Classifier(base_cnn)
+model1 = Classifier()
+model2 = Classifier()
+
 if args.gpu >= 0:
     chainer.cuda.get_device(args.gpu).use()
-    model = CNN().to_gpu()
-optimizer = optimizers.SGD()
+    base_cnn.to_gpu()
+    model1.to_gpu()
+    model2.to_gpu()
 
-optimizer.setup(model)
+base_cnn_optimizer = optimizers.SGD()
+base_cnn_optimizer.setup(base_cnn)
+model1_optimizer = optimizers.SGD()
+model1_optimizer.setup(model1)
+model2_optimizer = optimizers.SGD()
+model2_optimizer.setup(model2)
 
-updater = training.StandardUpdater(train_iter, optimizer)
+#updater = training.StandardUpdater(train_iter, optimizer)
 #updater = training.StandardUpdater(train_iter, optimizer, device=0)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
