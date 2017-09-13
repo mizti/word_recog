@@ -33,14 +33,27 @@ class CNN(Chain):
         h = F.relu(self.l1(h))
         return y
 
+    def __call__(self, x):
+        h = F.relu(self.norm1(self.conv1(x)))
+        h = F.max_pooling_2d(h, 2)
+        h = F.relu(self.norm2(self.conv2(h)))
+        h = F.max_pooling_2d(h, 2)
+        h = F.relu(self.norm3(self.conv3(h)))
+        h = F.max_pooling_2d(h, 2)
+        h = F.relu(self.l1(h))
+        return h
+
+
 class Classifier(Chain):
-    def __init__(self):
+    def __init__(self, base_cnn):
         super(Classifier, self).__init__(
+            base_cnn = base_cnn,
             linear = L.Linear(4096,37) 
         )
 
     def predict(self, x):
-        y = self.linear(x)
+        h = self.base_cnn(x)
+        y = self.linear(h)
         return y
 
     def __call__(self, x, t):
@@ -60,13 +73,13 @@ if __name__ == '__main__':
       #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
   
-train_data = TextImageDataset(10000, train=True, device=args.gpu)
-test_data = TextImageDataset(1000, train=False, device=args.gpu)
-train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
-test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
+train_data = TextImageDataset(100, train=True, device=args.gpu)
+test_data = TextImageDataset(100, train=False, device=args.gpu)
+train_iter = iterators.SerialIterator(train_data, batch_size=5, shuffle=True)
+test_iter = iterators.SerialIterator(test_data, batch_size=5, repeat=False, shuffle=False)
 
-base = CNN()
-model = Classifier(base)
+base_cnn = CNN()
+model = Classifier(base_cnn)
 if args.gpu >= 0:
     chainer.cuda.get_device(args.gpu).use()
     model = CNN().to_gpu()
@@ -74,14 +87,14 @@ optimizer = optimizers.SGD()
 
 optimizer.setup(model)
 
-#updater = training.StandardUpdater(train_iter, optimizer)
-updater = training.StandardUpdater(train_iter, optimizer, device=0)
+updater = training.StandardUpdater(train_iter, optimizer)
+#updater = training.StandardUpdater(train_iter, optimizer, device=0)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
 
 print("start running")
-#trainer.extend(extensions.Evaluator(test_iter, model))
-trainer.extend(extensions.Evaluator(test_iter, model, device=0))
+trainer.extend(extensions.Evaluator(test_iter, model))
+#trainer.extend(extensions.Evaluator(test_iter, model, device=0))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'main/accuracy', 'validation/main/accuracy']))
 trainer.extend(extensions.ProgressBar())
