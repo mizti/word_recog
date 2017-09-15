@@ -44,15 +44,16 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 
 		# text to label
 		label = self.text_to_label(text)
-		#return image_label, label
-		return image_array, label[0]
+		return image_array, label
+		#return image_array, label[0]
 
 	def get_example(self, i):
 		image_array, label = self._pairs[i][0], self._pairs[i][1]
 		return image_array, label
 
 	def generate_random_string(self, size=6, chars=string.ascii_uppercase + string.digits + ' '):
-		return ''.join(random.choice(chars) for _ in range(size))
+		#return ''.join(random.choice(chars) for _ in range(size))
+		return 'abcdef'
 
 	def text_to_label(self, text):
 		label = [] #np.zeros((len(text), 37)) # 37character type number

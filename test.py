@@ -87,11 +87,14 @@ if args.gpu >= 0:
     model1.to_gpu()
     model2.to_gpu()
 
-base_cnn_optimizer = optimizers.SGD()
+#base_cnn_optimizer = optimizers.SGD()
+base_cnn_optimizer = optimizers.Adam()
 base_cnn_optimizer.setup(base_cnn)
-model1_optimizer = optimizers.SGD()
+#model1_optimizer = optimizers.SGD()
+model1_optimizer = optimizers.Adam()
 model1_optimizer.setup(model1)
-model2_optimizer = optimizers.SGD()
+#model2_optimizer = optimizers.SGD()
+model2_optimizer = optimizers.Adam()
 model2_optimizer.setup(model2)
 
 while True:
@@ -105,11 +108,26 @@ while True:
 	xp = np if int(args.gpu) == -1 else cuda.cupy
 	x_batch = xp.array(in_arrays[0])
 	t_batch = xp.array(in_arrays[1])
+	print(t_batch.data.shape)
+	print(t_batch)
+
+	#t_batch1 = t_batch[:][0]
+	#t_batch2 = t_batch[:][1]
+	t_batch1 = t_batch[:,0]
+	t_batch2 = t_batch[:,1]
+
+	print(t_batch1.__class__)
+	print(t_batch1.shape)
+	print(t_batch1)
+	print(t_batch2.__class__)
+	print(t_batch2.__class__)
+	print(t_batch2)
 	
 	y = base_cnn(x_batch)
 	#print(y.data.shape)
-	loss1 = model1(y,t_batch)
-	loss2 = model2(y,t_batch)
+
+	loss1 = model1(y,t_batch1)
+	loss2 = model2(y,t_batch2)
 	print("loss1="+str(loss1.data))
 	print("loss2="+str(loss2.data))
 	#print(loss1.__class__) #<class 'chainer.variable.Variable'>
@@ -126,7 +144,3 @@ while True:
 	model2_optimizer.update()
 	base_cnn_optimizer.update()
 	
-	
-	
-
-
