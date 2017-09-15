@@ -9,7 +9,7 @@ from chainer.dataset import iterator as iterator_module
 from chainer.datasets import get_mnist
 from chainer import optimizer as optimizer_module
 
-class WordRecogUpdater(training.StandartUpdater):
+class WordRecogUpdater(training.StandardUpdater):
 	def __init__(self, iterator, batch_size, base_cnn, model1, model2, base_cnn_optimizer, model1_optimizer, model2_optimizer, converter=convert.concat_examples, device=None):
 		if isinstance(iterator, iterator_module.Iterator):
 			iterator = {'main':iterator}

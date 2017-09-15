@@ -52,31 +52,35 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		return image_array, label
 
 	def generate_random_string(self, size=6, chars=string.ascii_uppercase + string.digits + ' '):
-		#return ''.join(random.choice(chars) for _ in range(size))
-		return 'abcdef'
+		return ''.join(random.choice(chars) for _ in range(size))
 
 	def text_to_label(self, text):
 		label = [] #np.zeros((len(text), 37)) # 37character type number
 		for index, c in enumerate(text):
-			ascii_code = ord(c)
-			# 0~9: number / 10: space / 11~36: upper case
-			if (ascii_code == 32):
-				# print("space"
-				ascii_code = 10
-			elif (ascii_code >=48 and ascii_code <= 57):
-				# print("number")
-				ascii_code = ascii_code - 48
-			elif (ascii_code >=65 and ascii_code <= 90):
-				# print("upper case")
-				ascii_code = ascii_code - 54
-			label.append(ascii_code)
+			label.append(self.char_to_int(c))
 		label = np.asarray(label).astype('int32')
 		if self._device >= 0:
 			label = chainer.cuda.to_gpu(label)
 		return label
 
+	# returns 0~9: number / 10: space / 11~36: upper case
+	# currently don't accept small case alphabets
+	def char_to_int(self, c):
+		ascii_code = ord(c)
+		if (ascii_code >=48 and ascii_code <= 57):
+			# print("number")
+			ascii_code = ascii_code - 48
+		elif (ascii_code >=65 and ascii_code <= 90):
+			# print("upper case")
+			ascii_code = ascii_code - 54
+		elif (ascii_code == 32):
+			# print("space")
+			ascii_code = 10
+		else:
+			raise ValueError("not a alphanumeric character")
+		return ascii_code
+
 	def text_to_image(self, text):
-		# text to image
 		fonts = [
 			'Arial Rounded Bold.ttf',
 			'Avenir.ttc',
@@ -91,13 +95,10 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 		#size	
 		w, h = 32 * len(text), 32
 		text_w, text_h = font.getsize(text)
-		#text_x, text_y = (w - text_w) * random.random(), (h - text_h) * random.random()
 		text_x, text_y = (w - text_w) * 0, (h - text_h) * random.random()
 		
-		#im = Image.new('L', (w, h), 255)
 		im = Image.new('RGB', (w, h), (255,255,255))
 		draw = ImageDraw.Draw(im)
-		#draw.text((text_x, text_y), text, fill=(0), font=font)
 		draw.text((text_x, text_y), text, fill=(0,100,80), font=font)
 	
 		#if self._train:

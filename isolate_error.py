@@ -72,10 +72,10 @@ if __name__ == '__main__':
       #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
   
-train_data = TextImageDataset(10, train=True, device=args.gpu)
-test_data = TextImageDataset(10, train=False, device=args.gpu)
-train_iter = iterators.SerialIterator(train_data, batch_size=2, shuffle=True)
-test_iter = iterators.SerialIterator(test_data, batch_size=2, repeat=False, shuffle=False)
+train_data = TextImageDataset(10000, train=True, device=args.gpu)
+test_data = TextImageDataset(1000, train=False, device=args.gpu)
+train_iter = iterators.SerialIterator(train_data, batch_size=20, shuffle=True)
+test_iter = iterators.SerialIterator(test_data, batch_size=20, repeat=False, shuffle=False)
 
 base_cnn = CNN()
 model1 = Classifier()
@@ -108,21 +108,11 @@ while True:
 	xp = np if int(args.gpu) == -1 else cuda.cupy
 	x_batch = xp.array(in_arrays[0])
 	t_batch = xp.array(in_arrays[1])
-	print(t_batch.data.shape)
-	print(t_batch)
-
 	#t_batch1 = t_batch[:][0]
 	#t_batch2 = t_batch[:][1]
 	t_batch1 = t_batch[:,0]
 	t_batch2 = t_batch[:,1]
 
-	print(t_batch1.__class__)
-	print(t_batch1.shape)
-	print(t_batch1)
-	print(t_batch2.__class__)
-	print(t_batch2.__class__)
-	print(t_batch2)
-	
 	y = base_cnn(x_batch)
 	#print(y.data.shape)
 
@@ -136,11 +126,9 @@ while True:
 	base_cnn.cleargrads()
 	model1.cleargrads()
 	model2.cleargrads()
-	
 	loss1.backward()
-	loss2.backward()
-	
+	loss2.backward() #error occurs here
+
+	base_cnn_optimizer.update()
 	model1_optimizer.update()
 	model2_optimizer.update()
-	base_cnn_optimizer.update()
-	
