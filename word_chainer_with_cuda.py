@@ -24,16 +24,6 @@ class CNN(Chain):
             l1 = L.Linear(24576, 4096)
         )
 
-    def predict(self, x):
-        h = F.relu(self.norm1(self.conv1(x)))
-        h = F.max_pooling_2d(h, 2)
-        h = F.relu(self.norm2(self.conv2(h)))
-        h = F.max_pooling_2d(h, 2)
-        h = F.relu(self.norm3(self.conv3(h)))
-        h = F.max_pooling_2d(h, 2)
-        h = F.relu(self.l1(h))
-        return y
-
     def __call__(self, x):
         h = F.relu(self.norm1(self.conv1(x)))
         h = F.max_pooling_2d(h, 2)
@@ -52,7 +42,7 @@ class Classifier(Chain):
         )
 
     def predict(self, x):
-        y = self.linear(h)
+        y = self.linear(x)
         return y
 
     def __call__(self, x, t):
@@ -72,10 +62,10 @@ if __name__ == '__main__':
       #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
   
-train_data = TextImageDataset(100, train=True, device=args.gpu)
-test_data = TextImageDataset(100, train=False, device=args.gpu)
-train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
-test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
+train_data = TextImageDataset(10, train=True, device=args.gpu)
+test_data = TextImageDataset(10, train=False, device=args.gpu)
+train_iter = iterators.SerialIterator(train_data, batch_size=5, shuffle=True)
+test_iter = iterators.SerialIterator(test_data, batch_size=5, repeat=False, shuffle=False)
 
 base_cnn = CNN()
 model1 = Classifier()
@@ -96,11 +86,11 @@ model2_optimizer.setup(model2)
 
 #updater = training.StandardUpdater(train_iter, optimizer)
 #updater = training.StandardUpdater(train_iter, optimizer, device=0)
+updater = WordRecogUpdater(train_iter, base_cnn, model1, model2, base_cnn_optimizer, model1_optimizer, model2_optimizer, converter=convert.concat_examples, device=args.gpu)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
-
 print("start running")
-trainer.extend(extensions.Evaluator(test_iter, model))
+#trainer.extend(extensions.Evaluator(test_iter, model1))
 #trainer.extend(extensions.Evaluator(test_iter, model, device=0))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'main/accuracy', 'validation/main/accuracy']))
