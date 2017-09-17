@@ -67,26 +67,29 @@ test_data = TextImageDataset(10, train=False, device=args.gpu)
 train_iter = iterators.SerialIterator(train_data, batch_size=5, shuffle=True)
 test_iter = iterators.SerialIterator(test_data, batch_size=5, repeat=False, shuffle=False)
 
-base_cnn = CNN()
-model1 = Classifier()
-model2 = Classifier()
+OUTPUT_NUM = 6
 
+base_cnn = CNN()
 if args.gpu >= 0:
     chainer.cuda.get_device(args.gpu).use()
     base_cnn.to_gpu()
-    model1.to_gpu()
-    model2.to_gpu()
-
 base_cnn_optimizer = optimizers.SGD()
 base_cnn_optimizer.setup(base_cnn)
-model1_optimizer = optimizers.SGD()
-model1_optimizer.setup(model1)
-model2_optimizer = optimizers.SGD()
-model2_optimizer.setup(model2)
+
+classifiers = []
+cl_optimizers = []
+for i in range(0, OUTPUT_NUM):
+    cl = Classifier()
+    if args.gpu >= 0:
+        cl.to_gpu()
+    cl_optimizer = optimizers.SGD()
+    cl_optimizer.setup(cl)
+    classifiers.append(cl)
+    cl_optimizers.append(cl_optimizer)
 
 #updater = training.StandardUpdater(train_iter, optimizer)
 #updater = training.StandardUpdater(train_iter, optimizer, device=0)
-updater = WordRecogUpdater(train_iter, base_cnn, model1, model2, base_cnn_optimizer, model1_optimizer, model2_optimizer, converter=convert.concat_examples, device=args.gpu)
+updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
 print("start running")

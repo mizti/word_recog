@@ -1,4 +1,5 @@
 import six
+import numpy as np
 import chainer
 import chainer.functions as F
 import chainer.links as L
@@ -11,49 +12,63 @@ from chainer.datasets import get_mnist
 from chainer import optimizer as optimizer_module
 
 class WordRecogUpdater(training.StandardUpdater):
-	def __init__(self, iterator, base_cnn, model1, model2, base_cnn_optimizer, model1_optimizer, model2_optimizer, converter=convert.concat_examples, device=None):
-		if isinstance(iterator, iterator_module.Iterator):
-			iterator = {'main':iterator}
-		self._iterators = iterator
-		self.base_cnn = base_cnn
-		self.model1 = model1
-		self.model2 = model2
+    def __init__(self, iterator, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=None):
+        if isinstance(iterator, iterator_module.Iterator):
+            iterator = {'main':iterator}
+        self._iterators = iterator
+        self.base_cnn = base_cnn
+        #self.model1 = model1
+        #self.model2 = model2
+        self.classifiers = classifiers
 
-		if isinstance(base_cnn_optimizer, optimizer_module.Optimizer) and isinstance(model1_optimizer, optimizer_module.Optimizer) and isinstance(model2_optimizer, optimizer_module.Optimizer):
-			optimizer = {
-				'base_cnn_opt': base_cnn_optimizer, 
-				'model1_opt': model1_optimizer,
-				'model2_opt': model2_optimizer
-			}
-		self._optimizers = optimizer
-		self.converter = convert.concat_examples
-		self.device = device
-		self.iteration = 0
+#       if isinstance(base_cnn_optimizer, optimizer_module.Optimizer) and isinstance(model1_optimizer, optimizer_module.Optimizer) and isinstance(model2_optimizer, optimizer_module.Optimizer):
+#           optimizer = {
+#               'base_cnn_opt': base_cnn_optimizer, 
+#               'model1_opt': model1_optimizer,
+#               'model2_opt': model2_optimizer
+#           }
+#
+        self._optimizers = {}
+        self._optimizers['base_cnn_opt'] = base_cnn_optimizer
+        for i in range(0, len(cl_optimizers)):
+            self._optimizers[str(i)] = cl_optimizers[i]
 
-	def update_core(self):
-		iterator = self._iterators['main'].next()
-		in_arrays = self.converter(iterator, self.device)
+        self.converter = convert.concat_examples
+        self.device = device
+        self.iteration = 0
 
-		xp = np if int(self.device) == -1 else cuda.cupy
-		x_batch = xp.array(in_arrays[0])
-		t_batch = xp.array(in_arrays[1])
-		t_batch1 = t_batch[:,0]
-		t_batch2 = t_batch[:,1]
-		y = self.base_cnn(x_batch)
+    def update_core(self):
+        iterator = self._iterators['main'].next()
+        in_arrays = self.converter(iterator, self.device)
 
-		loss1 = self.model1(y,t_batch1)
-		loss2 = self.model2(y,t_batch2)
+        xp = np if int(self.device) == -1 else cuda.cupy
+        x_batch = xp.array(in_arrays[0])
+        t_batch = xp.array(in_arrays[1])
+        #t_batch1 = t_batch[:,0]
+        #t_batch2 = t_batch[:,1]
+        y = self.base_cnn(x_batch)
 
-		reporter.report({'loss1':loss1, 'loss2':loss2})
-		loss_dic = {'loss1':loss1, 'loss2':loss2}
-		print("loss1="+str(loss1.data))
-		print("loss2="+str(loss2.data))
-	
-		for name, optimizer in six.iteritems(self._optimizers):
-			optimizer.target.cleargrads()
+        loss_dic = {}
+        for i, classifier in enumerate(self.classifiers):
+            loss = classifier(y, t_batch[:,i])
+            print(str(i) + " " +str(loss.data))
+            loss_dic[str(i)] = loss
+        print("\n")
 
-		for name, loss in six.iteritems(loss_dic):	
-			loss.backward()
+        #loss1 = self.model1(y,t_batch1)
+        #loss2 = self.model2(y,t_batch2)
 
-		for name, optimizer in six.iteritems(self._optimizers):
-			optimizer.update()
+        #loss_dic = {'loss1':loss1, 'loss2':loss2}
+
+        #reporter.report({'loss1':loss1, 'loss2':loss2})
+        #print("loss1="+str(loss1.data))
+        #print("loss2="+str(loss2.data))
+
+        for name, optimizer in six.iteritems(self._optimizers):
+            optimizer.target.cleargrads()
+
+        for name, loss in six.iteritems(loss_dic):  
+            loss.backward()
+
+        for name, optimizer in six.iteritems(self._optimizers):
+            optimizer.update()

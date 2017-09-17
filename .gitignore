@@ -13,3 +13,4 @@ data
 result/*
 data/*
 *.swp
+*.pyc
