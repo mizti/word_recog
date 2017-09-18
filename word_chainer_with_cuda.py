@@ -10,6 +10,7 @@ import chainer.links as L
 from chainer.training import extensions
 from lib.text_image_dataset import *
 from lib.word_recog_updater import *
+from lib.word_recog_evaluator import *
 
 class CNN(Chain):
     def __init__(self):
@@ -87,16 +88,16 @@ for i in range(0, OUTPUT_NUM):
     classifiers.append(cl)
     cl_optimizers.append(cl_optimizer)
 
-#updater = training.StandardUpdater(train_iter, optimizer)
-#updater = training.StandardUpdater(train_iter, optimizer, device=0)
 updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
 print("start running")
 #trainer.extend(extensions.Evaluator(test_iter, model1))
 #trainer.extend(extensions.Evaluator(test_iter, model, device=0))
+#trainer.extend(extensions.WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
+trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 trainer.extend(extensions.LogReport())
-trainer.extend(extensions.PrintReport(['epoch', 'main/accuracy', 'validation/main/accuracy']))
+trainer.extend(extensions.PrintReport(['epoch', 'eval/loss1', 'eval/loss2', 'eval/loss5']))
 trainer.extend(extensions.ProgressBar())
 trainer.run()
 print("end running")

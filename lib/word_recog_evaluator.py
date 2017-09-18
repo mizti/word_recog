@@ -1,0 +1,67 @@
+import copy
+import six
+from chainer import configuration
+from chainer.dataset import convert
+from chainer.dataset import iterator as iterator_module
+from chainer import function
+from chainer import link
+from chainer import reporter as reporter_module
+#from chainer.training import extension
+from chainer.training import extensions
+
+class WordRecogEvaluator(extensions.Evaluator):
+    default_name='val'
+    def __init__(self, iterator, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None):
+        if isinstance(iterator, iterator_module.Iterator):
+            iterator = {'main': iterator}
+        self._iterators = iterator
+        self.base_cnn = base_cnn
+        self._targets = {}
+        for i, cl in enumerate(classifiers):
+            self._targets[str(i)] = cl
+
+        self.converter = converter
+        self.device = device
+        self.eval_hook = eval_hook
+        self.eval_func = eval_func
+
+    def evaluate(self):
+        iterator = self._iterators['main']
+        targets = self._targets
+
+        if self.eval_hook:
+            self.eval_hook(self)
+
+        if hasattr(iterator, 'reset'):
+            iterator.reset()
+            it = iterator
+        else:
+            # make a shallow copy of iterator
+            it = copy.copy(iterator)
+
+        summary = reporter_module.DictSummary()
+
+        for batch in it:
+            observation = {}
+            with reporter_module.report_scope(observation):
+                in_arrays = self.converter(batch, self.device)
+                with function.no_backprop_mode():
+                    #print("***")
+                    #print(in_arrays)
+                    #print(in_arrays.__class__) #tuple
+                    #print(len(in_arrays)) #tuple
+                    #print(in_arrays[0].__class__) 
+                    #print(in_arrays[0].data) 
+                    h = self.base_cnn(in_arrays[0])
+                    for name, cl in six.iteritems(targets):
+                        #print(name)
+                        #print(cl)
+                        #print(in_arrays[1])
+                        #print(in_arrays[1][:,int(name)])
+                        loss = cl(h, in_arrays[1][:,int(name)])
+                        #pass
+                        #observation['eval/loss' + name] = loss
+                        #observation['main/accuracy'] = loss
+
+            summary.add(observation)
+        return summary.compute_mean()
