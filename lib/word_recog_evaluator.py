@@ -1,5 +1,6 @@
 import copy
 import six
+import random
 from chainer import configuration
 from chainer.dataset import convert
 from chainer.dataset import iterator as iterator_module
@@ -8,6 +9,7 @@ from chainer import link
 from chainer import reporter as reporter_module
 #from chainer.training import extension
 from chainer.training import extensions
+from lib.utils import *
 
 class WordRecogEvaluator(extensions.Evaluator):
     default_name='val'
@@ -41,6 +43,7 @@ class WordRecogEvaluator(extensions.Evaluator):
 
         summary = reporter_module.DictSummary()
 
+        print_now = False
         for batch in it:
             observation = {}
             with reporter_module.report_scope(observation):
@@ -53,15 +56,20 @@ class WordRecogEvaluator(extensions.Evaluator):
                     #print(in_arrays[0].__class__) 
                     #print(in_arrays[0].data) 
                     h = self.base_cnn(in_arrays[0])
+                    recoged_word = []
                     for name, cl in six.iteritems(targets):
                         #print(name)
                         #print(cl)
                         #print(in_arrays[1])
                         #print(in_arrays[1][:,int(name)])
                         loss = cl(h, in_arrays[1][:,int(name)])
+                        recoged_word.append(cl.predict(h).data[0].argmax())
                         #pass
                         #observation['eval/loss' + name] = loss
                         #observation['main/accuracy'] = loss
+                    labeled_word = in_arrays[1][0]
+                    print(label_to_text(labeled_word))
+                    print(label_to_text(recoged_word))
 
             summary.add(observation)
         return summary.compute_mean()
