@@ -43,14 +43,3 @@ def label_to_text(label):
     for i in label:
        ret = ret + char_list[i]
     return ret
-
-li = [9,20,23,26]
-ndarray = np.asarray(li)
-var = Variable(ndarray)
-
-print(label_to_text(li))
-print(label_to_text(ndarray))
-print(label_to_text(var))
-
-st = "9JMP"
-print(text_to_label(st))
