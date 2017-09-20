@@ -10,14 +10,20 @@ from chainer import reporter as reporter_module
 from chainer.training import extensions
 from chainer import training
 
+#def sample_recog(message):
+#    @training.make_extension(trigger=(3, 'iteration'))
+#    def _sample_recog(trainer):
+#        print(message)
+#        #print(trainer.__class__)
+#    return _sample_recog
+
+#@training.make_extension(trigger=(3, 'iteration'))
+#def sample_recog(trainer):
+#    print("hoge")
+
+
 def sample_recog():
-    #@training.make_extension(trigger=(1, 'epoch'))
-    a = "fuga"
-    @training.make_extension(trigger=(1, 'iteration'))
     def _sample_recog(trainer):
-        print(a) # can see a
         print("hoge")
-        #base_cnn = trainer.updater.base_cnn
-        #classifiers = trainer.updater.classifiers
-        #data = test_data#TextImageDatase(1, train=False, device=trainer.updater.device)
+    _sample_recog.trigger=(3, 'iteration')
     return _sample_recog

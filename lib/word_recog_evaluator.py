@@ -9,7 +9,7 @@ from chainer import link
 from chainer import reporter as reporter_module
 #from chainer.training import extension
 from chainer.training import extensions
-from lib.utils import *
+#from lib.utils import *
 
 class WordRecogEvaluator(extensions.Evaluator):
     default_name='validation'
