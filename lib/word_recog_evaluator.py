@@ -12,7 +12,7 @@ from chainer.training import extensions
 from lib.utils import *
 
 class WordRecogEvaluator(extensions.Evaluator):
-    default_name='val'
+    default_name='validation'
     def __init__(self, iterator, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None):
         if isinstance(iterator, iterator_module.Iterator):
             iterator = {'main': iterator}
@@ -49,12 +49,6 @@ class WordRecogEvaluator(extensions.Evaluator):
             with reporter_module.report_scope(observation):
                 in_arrays = self.converter(batch, self.device)
                 with function.no_backprop_mode():
-                    #print("***")
-                    #print(in_arrays)
-                    #print(in_arrays.__class__) #tuple
-                    #print(len(in_arrays)) #tuple
-                    #print(in_arrays[0].__class__) 
-                    #print(in_arrays[0].data) 
                     h = self.base_cnn(in_arrays[0])
                     recoged_word = []
                     for name, cl in six.iteritems(targets):
@@ -64,12 +58,11 @@ class WordRecogEvaluator(extensions.Evaluator):
                         #print(in_arrays[1][:,int(name)])
                         loss = cl(h, in_arrays[1][:,int(name)])
                         recoged_word.append(cl.predict(h).data[0].argmax())
-                        #pass
-                        #observation['eval/loss' + name] = loss
-                        #observation['main/accuracy'] = loss
                     labeled_word = in_arrays[1][0]
-                    print(label_to_text(labeled_word))
-                    print(label_to_text(recoged_word))
-
+                    #print("label: " + label_to_text(labeled_word))
+                    #print("recog: " + label_to_text(recoged_word))
+                    #reporter_module.report({'label_word': label_to_text(labeled_word)})
+                    #reporter_module.report({'recog_word': label_to_text(recoged_word)})
+            print(summary) # <chainer.reporter.DictSummary object at 0x1103bfa58>
             summary.add(observation)
         return summary.compute_mean()
