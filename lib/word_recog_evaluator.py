@@ -52,17 +52,10 @@ class WordRecogEvaluator(extensions.Evaluator):
                     h = self.base_cnn(in_arrays[0])
                     recoged_word = []
                     for name, cl in six.iteritems(targets):
-                        #print(name)
-                        #print(cl)
-                        #print(in_arrays[1])
-                        #print(in_arrays[1][:,int(name)])
                         loss = cl(h, in_arrays[1][:,int(name)])
                         recoged_word.append(cl.predict(h).data[0].argmax())
                     labeled_word = in_arrays[1][0]
                     #print("label: " + label_to_text(labeled_word))
                     #print("recog: " + label_to_text(recoged_word))
-                    #reporter_module.report({'label_word': label_to_text(labeled_word)})
-                    #reporter_module.report({'recog_word': label_to_text(recoged_word)})
-            print(summary) # <chainer.reporter.DictSummary object at 0x1103bfa58>
             summary.add(observation)
         return summary.compute_mean()

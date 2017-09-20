@@ -92,10 +92,8 @@ updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
 print("start running")
-#trainer.extend(extensions.Evaluator(test_iter, model1))
-#trainer.extend(extensions.Evaluator(test_iter, model, device=0))
-#trainer.extend(extensions.WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
+
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'eval/loss1', 'eval/loss2', 'eval/loss5']))
 trainer.extend(extensions.ProgressBar())
