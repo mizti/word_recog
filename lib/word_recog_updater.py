@@ -22,7 +22,7 @@ class WordRecogUpdater(training.StandardUpdater):
         self._optimizers = {}
         self._optimizers['base_cnn_opt'] = base_cnn_optimizer
         for i in range(0, len(cl_optimizers)):
-            self._optimizers['cl' + str(i)] = cl_optimizers[i]
+            self._optimizers[str(i)] = cl_optimizers[i]
 
 
         self.converter = convert.concat_examples

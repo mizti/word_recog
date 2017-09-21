@@ -12,20 +12,16 @@ from chainer import training
 from lib.utils import *
 
 def sample_result(dataset):
-    @training.make_extension(trigger=(1, 'iteration'))
+    @training.make_extension(trigger=(5, 'epoch'))
     def _sample_result(trainer):
-        print("hoge")
         base_cnn = trainer.updater.base_cnn
         classifiers = trainer.updater.classifiers
-        print(dataset.__class__)
-        print(dataset[0])
         label = dataset[0][1]
         data = dataset[0][0][np.newaxis, :]
-        #label = dataset[0][1]
-        #print(data.__class__)
-        print(data.shape)
         h = base_cnn(data)
-        print(label.__class__)
-        print(label_to_text(label))
-        #print(trainer.__class__)
+        recoged_word = []
+        for i, cl in enumerate(classifiers):
+            recoged_word.append(cl.predict(h).data[0].argmax())
+        print("recoged: " + label_to_text(recoged_word))
+        print("label:   " + label_to_text(label))
     return _sample_result

@@ -97,7 +97,7 @@ trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=co
 #trainer.extend(sample_recog(trainer, test_data))
 trainer.extend(sample_result(TextImageDataset(2, train=False, device=args.gpu)))
 trainer.extend(extensions.LogReport())
-trainer.extend(extensions.PrintReport(['epoch', 'eval/loss1', 'eval/loss2', 'eval/loss5']))
+trainer.extend(extensions.PrintReport(['epoch', 'validation/0/loss', 'validation/3/loss', '3/loss', 'validation/5/loss']))
 trainer.extend(extensions.ProgressBar())
 trainer.run()
 print("end running")
