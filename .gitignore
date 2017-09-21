@@ -14,3 +14,4 @@ result/*
 data/*
 *.swp
 *.pyc
+nohup.out

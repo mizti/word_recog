@@ -102,7 +102,8 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
         draw = ImageDraw.Draw(im)
         draw.text((text_x, text_y), text, fill=(0,100,80), font=font)
 
-        im = im.resize((32*6, 32))
+        #im = im.resize((32*6, 32))
+        im = im.resize((100, 32))
     
         #if self._train:
         #   im.save('result/image_train' + str(random.randint(0, 100)) + '.png')

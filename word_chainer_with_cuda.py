@@ -23,7 +23,7 @@ class CNN(Chain):
             norm2 = L.BatchNormalization(128),
             conv3 = L.Convolution2D(in_channels=128, out_channels=256, ksize=3, stride=1, pad=1), 
             norm3 = L.BatchNormalization(256),
-            l1 = L.Linear(24576, 4096)
+            l1 = L.Linear(13312, 4096)
         )
 
     def __call__(self, x):
@@ -64,8 +64,10 @@ if __name__ == '__main__':
       #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
   
-train_data = TextImageDataset(10000, train=True, device=args.gpu)
-test_data = TextImageDataset(1000, train=False, device=args.gpu)
+#train_data = TextImageDataset(10000, train=True, device=args.gpu)
+#test_data = TextImageDataset(1000, train=False, device=args.gpu)
+train_data = TextImageDataset(100, train=True, device=args.gpu)
+test_data = TextImageDataset(100, train=False, device=args.gpu)
 train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
 test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
 
