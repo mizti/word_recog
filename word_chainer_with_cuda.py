@@ -11,7 +11,7 @@ from chainer.training import extensions
 from lib.text_image_dataset import *
 from lib.word_recog_updater import *
 from lib.word_recog_evaluator import *
-from lib.sample_recog import *
+from lib.sample_result import *
 
 class CNN(Chain):
     def __init__(self):
@@ -95,7 +95,7 @@ trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 print("start running")
 trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 #trainer.extend(sample_recog(trainer, test_data))
-trainer.extend(sample_recog())
+trainer.extend(sample_result(TextImageDataset(2, train=False, device=args.gpu)))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'eval/loss1', 'eval/loss2', 'eval/loss5']))
 trainer.extend(extensions.ProgressBar())
