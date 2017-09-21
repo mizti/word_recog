@@ -21,7 +21,10 @@ def sample_result(dataset):
         h = base_cnn(data)
         recoged_word = []
         for i, cl in enumerate(classifiers):
-            recoged_word.append(cl.predict(h).data[0].argmax())
-        print("recoged: " + label_to_text(recoged_word))
+            content = cl.predict(h).data[0].argmax()
+            if isinstance(content, cupy.ndarray):
+                content = cupy.asnumpy(content)
+            recoged_word.append(content)
         print("label:   " + label_to_text(label))
+        print("recoged: " + label_to_text(recoged_word))
     return _sample_result

@@ -64,10 +64,8 @@ if __name__ == '__main__':
       #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
   
-#train_data = TextImageDataset(10000, train=True, device=args.gpu)
-#test_data = TextImageDataset(1000, train=False, device=args.gpu)
-train_data = TextImageDataset(100, train=True, device=args.gpu)
-test_data = TextImageDataset(100, train=False, device=args.gpu)
+train_data = TextImageDataset(10000, train=True, device=args.gpu)
+test_data = TextImageDataset(1000, train=False, device=args.gpu)
 train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
 test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
 

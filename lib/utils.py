@@ -41,5 +41,5 @@ def label_to_text(label):
     char_list = list(chars)
     ret = ""
     for i in label:
-       ret = ret + char_list[i]
+        ret = ret + char_list[i]
     return ret
