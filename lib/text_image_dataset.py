@@ -93,18 +93,21 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
         font = ImageFont.truetype('data/'+fontFile, 30)
 
         #size   
-        w, h = 32 * len(text), 32
         text_w, text_h = font.getsize(text)
-        text_x, text_y = (w - text_w) * 0, (h - text_h) * random.random()
+        text_x, text_y = 0, 0
+        w, h = text_w, 32 #fixed
+        
         
         im = Image.new('RGB', (w, h), (255,255,255))
         draw = ImageDraw.Draw(im)
         draw.text((text_x, text_y), text, fill=(0,100,80), font=font)
+
+        im = im.resize((32*6, 32))
     
-        #if self._train:
-        #   im.save('result/image_train' + str(random.randint(0, 100)) + '.png')
-        #else:
-        #   im.save('result/image_test' + str(random.randint(0, 100)) + '.png')
+        if self._train:
+           im.save('result/image_train' + str(random.randint(0, 100)) + '.png')
+        else:
+           im.save('result/image_test' + str(random.randint(0, 100)) + '.png')
 
         image_array = np.asarray(im)
         
