@@ -1,3 +1,4 @@
+import sys
 import copy
 import six
 import random
@@ -22,8 +23,9 @@ def sample_result(dataset):
         recoged_word = []
         for i, cl in enumerate(classifiers):
             content = cl.predict(h).data[0].argmax()
-            if isinstance(content, cupy.ndarray):
-                content = cupy.asnumpy(content)
+            if 'cupy' in sys.modules:
+                if isinstance(content, cupy.ndarray):
+                    content = cupy.asnumpy(content)
             recoged_word.append(content)
         print("label:   " + label_to_text(label))
         print("recoged: " + label_to_text(recoged_word))

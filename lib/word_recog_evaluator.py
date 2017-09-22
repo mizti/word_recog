@@ -43,7 +43,6 @@ class WordRecogEvaluator(extensions.Evaluator):
 
         summary = reporter_module.DictSummary()
 
-        print_now = False
         for batch in it:
             observation = {}
             with reporter_module.report_scope(observation):

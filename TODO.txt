@@ -1,5 +1,0 @@
-・とりあえず、今の状態で1文字学習できるか確認する
-・datasetを[0]以外の返却するようにし、Classifier.__call__の中でi番目を選ぶようにする
-・pattern1
- - 単純に、Classifier0 ~ Classifier20を作る => 別々に訓練
-

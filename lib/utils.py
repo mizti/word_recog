@@ -1,5 +1,9 @@
+import sys
 import numpy as np
-import cupy
+try:
+    import cupy
+except ImportError:
+    pass
 from chainer import Variable
 
 def text_to_label(text, device=-1):
@@ -34,8 +38,9 @@ def label_to_text(label):
         label = label.data
     if isinstance(label, np.ndarray):
         label = label.tolist()
-    if isinstance(label, cupy.ndarray):
-        label = label.tolist()
+    if 'cupy' in sys.modules:
+        if isinstance(label, cupy.ndarray):
+            label = label.tolist()
 
     chars = "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     char_list = list(chars)
