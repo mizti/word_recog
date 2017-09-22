@@ -13,6 +13,9 @@ from lib.word_recog_updater import *
 from lib.word_recog_evaluator import *
 from lib.sample_result import *
 
+#OUTPUT_NUM = 6
+OUTPUT_NUM = 8
+
 class CNN(Chain):
     def __init__(self):
         super(CNN, self).__init__(
@@ -40,7 +43,7 @@ class CNN(Chain):
 class Classifier(Chain):
     def __init__(self):
         super(Classifier, self).__init__(
-            linear = L.Linear(4096,37) 
+            linear = L.Linear(4096,38) 
         )
 
     def predict(self, x):
@@ -59,19 +62,24 @@ if __name__ == '__main__':
       parser.add_argument('--gpu', '-g', type=int, default=-1, help='GPU ID (negative value indicates CPU)')
       parser.add_argument('--model_snapshot', '-m', default=None, help='Filename of model snapshot')
       parser.add_argument('--output', '-o', default='result', help='Sampling iteration for each test data')
+      #parser.add_argument('--debug', '-debug', default=None, help='debug mode')
+      parser.add_argument('--debug', '-de', action="store_true", help='debug mode')
       #parser.add_argument('--data_dir', '-d', default='data', help='directory of pretrain models and image data')
       #parser.add_argument('--net', '-n', default='GoogLeNet', help='Choose network to use for prediction')
       #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
-  
-#train_data = TextImageDataset(10000, train=True, device=args.gpu)
-#test_data = TextImageDataset(1000, train=False, device=args.gpu)
-train_data = TextImageDataset(10, train=True, device=args.gpu)
-test_data = TextImageDataset(10, train=False, device=args.gpu)
-train_iter = iterators.SerialIterator(train_data, batch_size=5, shuffle=True)
-test_iter = iterators.SerialIterator(test_data, batch_size=5, repeat=False, shuffle=False)
 
-OUTPUT_NUM = 6
+if args.debug:
+    print("debug mode")
+    train_data = TextImageDataset(100, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    test_data = TextImageDataset(100, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+else:
+    train_data = TextImageDataset(10000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    test_data = TextImageDataset(1000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+
+train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
+test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
+
 
 base_cnn = CNN()
 if args.gpu >= 0:
@@ -97,7 +105,7 @@ trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 print("start running")
 trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 #trainer.extend(sample_recog(trainer, test_data))
-trainer.extend(sample_result(TextImageDataset(1, train=False, device=args.gpu)))
+trainer.extend(sample_result(TextImageDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu)))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'validation/0/loss', 'validation/3/loss', '3/loss', 'validation/5/loss']))
 trainer.extend(extensions.ProgressBar())

@@ -6,31 +6,29 @@ except ImportError:
     pass
 from chainer import Variable
 
-def text_to_label(text, device=-1):
+# returns 0~9: number / 10: space / 11~36: upper case /37: empty
+CHARS = "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+EMPTY_CODE=len(CHARS)
+
+def text_to_label(text, length=0 ,device=-1):
     label = []
     for index, c in enumerate(text):
         label.append(char_to_int(c))
+    if isinstance(length, int) and length>0:
+        while len(label) < length:
+            label.append(char_to_int(""))
+
     label = np.asarray(label).astype('int32')
     if device >= 0:
         label = chainer.cuda.to_gpu(label)
     return label
 
-# returns 0~9: number / 10: space / 11~36: upper case
-# currently don't accept small case alphabets
 def char_to_int(c):
-    ascii_code = ord(c)
-    if (ascii_code >=48 and ascii_code <= 57):
-        # print("number")
-        ascii_code = ascii_code - 48
-    elif (ascii_code >=65 and ascii_code <= 90):
-        # print("upper case")
-        ascii_code = ascii_code - 54
-    elif (ascii_code == 32):
-        # print("space")
-        ascii_code = 10
+    if c is "":
+        ret = EMPTY_CODE
     else:
-        raise ValueError("not a alphanumeric character")
-    return ascii_code
+        ret = CHARS.index(c)
+    return ret
 
 
 def label_to_text(label):
@@ -42,9 +40,11 @@ def label_to_text(label):
         if isinstance(label, cupy.ndarray):
             label = label.tolist()
 
-    chars = "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    char_list = list(chars)
+    char_list = list(CHARS)
     ret = ""
     for i in label:
-        ret = ret + char_list[i]
+        if i >= len(CHARS): #if i exceeds the lenghth of CHARS, it is ""
+            ret = ret + "" # same to do nothing
+        else:
+            ret = ret + char_list[i]
     return ret

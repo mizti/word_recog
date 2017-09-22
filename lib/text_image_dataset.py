@@ -7,23 +7,25 @@ import sys
 import random
 import numpy as np
 import string
+import chainer
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
-import chainer
 from chainer import cuda, Function, gradient_check, report, training, utils, Variable
 from chainer import datasets, iterators, optimizers, serializers
 from chainer import Link, Chain, ChainList
 import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
+from utils import *
 
 class TextImageDataset(chainer.dataset.DatasetMixin):
-    def __init__(self, datanum=10, normalize=True, flatten=False, train=True, device=-1):
+    def __init__(self, datanum=10, max_length=6, normalize=True, flatten=False, train=True, device=-1):
         self._normalize = normalize
         self._flatten = flatten
         self._train = train
         self._device = device
+        self._max_length = max_length
         pairs = []
         for _ in range(datanum):
             image_array, label = self.generate_data()
@@ -35,7 +37,8 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
 
     def generate_data(self):
         # generate text
-        length = 6
+        #length = 6
+        length = max(random.randrange(2,self._max_length), random.randrange(2,self._max_length))
         text = self.generate_random_string(length)
         #print(text)
 
@@ -43,9 +46,8 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
         image_array = self.text_to_image(text)
 
         # text to label
-        label = self.text_to_label(text)
+        label = text_to_label(text, length=self._max_length)
         return image_array, label
-        #return image_array, label[0]
 
     def get_example(self, i):
         image_array, label = self._pairs[i][0], self._pairs[i][1]
@@ -54,31 +56,31 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
     def generate_random_string(self, size=6, chars=string.ascii_uppercase + string.digits + ' '):
         return ''.join(random.choice(chars) for _ in range(size))
 
-    def text_to_label(self, text):
-        label = [] #np.zeros((len(text), 37)) # 37character type number
-        for index, c in enumerate(text):
-            label.append(self.char_to_int(c))
-        label = np.asarray(label).astype('int32')
-        if self._device >= 0:
-            label = chainer.cuda.to_gpu(label)
-        return label
+    #def text_to_label(self, text):
+    #    label = [] #np.zeros((len(text), 37)) # 37character type number
+    #    for index, c in enumerate(text):
+    #        label.append(self.char_to_int(c))
+    #    label = np.asarray(label).astype('int32')
+    #    if self._device >= 0:
+    #        label = chainer.cuda.to_gpu(label)
+    #    return label
 
-    # returns 0~9: number / 10: space / 11~36: upper case
-    # currently don't accept small case alphabets
-    def char_to_int(self, c):
-        ascii_code = ord(c)
-        if (ascii_code >=48 and ascii_code <= 57):
-            # print("number")
-            ascii_code = ascii_code - 48
-        elif (ascii_code >=65 and ascii_code <= 90):
-            # print("upper case")
-            ascii_code = ascii_code - 54
-        elif (ascii_code == 32):
-            # print("space")
-            ascii_code = 10
-        else:
-            raise ValueError("not a alphanumeric character")
-        return ascii_code
+    ## returns 0~9: number / 10: space / 11~36: upper case
+    ## currently don't accept small case alphabets
+    #def char_to_int(self, c):
+    #    ascii_code = ord(c)
+    #    if (ascii_code >=48 and ascii_code <= 57):
+    #        # print("number")
+    #        ascii_code = ascii_code - 48
+    #    elif (ascii_code >=65 and ascii_code <= 90):
+    #        # print("upper case")
+    #        ascii_code = ascii_code - 54
+    #    elif (ascii_code == 32):
+    #        # print("space")
+    #        ascii_code = 10
+    #    else:
+    #        raise ValueError("not a alphanumeric character")
+    #    return ascii_code
 
     def text_to_image(self, text):
         fonts = [
@@ -123,4 +125,4 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
             image_array = chainer.cuda.to_gpu(image_array)
         return image_array
         
-train_data = TextImageDataset(10, train=True) 
+train_data = TextImageDataset(10, max_length=8, train=True) 
