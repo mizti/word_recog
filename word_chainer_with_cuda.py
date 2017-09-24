@@ -12,6 +12,7 @@ from lib.text_image_dataset import *
 from lib.word_recog_updater import *
 from lib.word_recog_evaluator import *
 from lib.sample_result import *
+from lib.decay_lr import * 
 
 #OUTPUT_NUM = 6
 OUTPUT_NUM = 8
@@ -114,6 +115,7 @@ updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 trainer.extend(sample_result(TextImageDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu),output_dir=args.output))
+trainer.extend(decay_lr(decay_rate=0.98))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'validation/0/loss', 'validation/3/loss', '3/loss', 'validation/5/loss']))
 trainer.extend(extensions.ProgressBar())
