@@ -24,18 +24,28 @@ class CNN(Chain):
             norm1 = L.BatchNormalization(64),
             conv2 = L.Convolution2D(in_channels=64, out_channels=128, ksize=3, stride=1, pad=1), 
             norm2 = L.BatchNormalization(128),
-            conv3 = L.Convolution2D(in_channels=128, out_channels=256, ksize=3, stride=1, pad=1), 
+            conv3_1 = L.Convolution2D(in_channels=128, out_channels=256, ksize=3, stride=1, pad=1), 
+            conv3_2 = L.Convolution2D(in_channels=256, out_channels=512, ksize=3, stride=1, pad=1), 
             norm3 = L.BatchNormalization(256),
-            l1 = L.Linear(13312, 4096)
+
+            conv4 = L.Convolution2D(in_channels=256, out_channels=512, ksize=3, stride=1, pad=1), 
+            #conv4 = L.Convolution2D(in_channels=512, out_channels=512, ksize=3, stride=1, pad=1), 
+
+            l1 = L.Linear(26624, 4096)
         )
 
     def __call__(self, x):
-        h = F.relu(self.norm1(self.conv1(x)))
+        h = F.relu(self.conv1(x))
         h = F.max_pooling_2d(h, 2)
-        h = F.relu(self.norm2(self.conv2(h)))
+
+        h = F.relu(self.conv2(h))
         h = F.max_pooling_2d(h, 2)
-        h = F.relu(self.norm3(self.conv3(h)))
+
+        h = F.relu(self.conv3_1(h))
+        #h = F.relu(self.conv3_2(h))
         h = F.max_pooling_2d(h, 2)
+
+        h = F.relu(self.conv4(h))
         h = F.relu(self.l1(h))
         return h
 
@@ -43,11 +53,13 @@ class CNN(Chain):
 class Classifier(Chain):
     def __init__(self):
         super(Classifier, self).__init__(
-            linear = L.Linear(4096,38) 
+            linear1 = L.Linear(4096,4096),
+            linear2 = L.Linear(4096,38) 
         )
 
     def predict(self, x):
-        y = self.linear(x)
+        #y = self.linear1(x)
+        y = self.linear2(x)
         return y
 
     def __call__(self, x, t):
