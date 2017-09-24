@@ -15,38 +15,39 @@ from lib.sample_result import *
 
 #OUTPUT_NUM = 6
 OUTPUT_NUM = 8
+DROP_OUT_RATIO = 0.05
 
 class CNN(Chain):
     def __init__(self):
         super(CNN, self).__init__(
+            conv1 = L.Convolution2D(in_channels=1, out_channels=64, ksize=5, stride=1, pad=2), 
             #conv1 = L.Convolution2D(in_channels=3, out_channels=64, ksize=5, stride=1, pad=2), 
-            conv1 = L.Convolution2D(in_channels=3, out_channels=64, ksize=5, stride=1, pad=2), 
             norm1 = L.BatchNormalization(64),
             conv2 = L.Convolution2D(in_channels=64, out_channels=128, ksize=3, stride=1, pad=1), 
             norm2 = L.BatchNormalization(128),
             conv3_1 = L.Convolution2D(in_channels=128, out_channels=256, ksize=3, stride=1, pad=1), 
             conv3_2 = L.Convolution2D(in_channels=256, out_channels=512, ksize=3, stride=1, pad=1), 
             norm3 = L.BatchNormalization(256),
-
             conv4 = L.Convolution2D(in_channels=256, out_channels=512, ksize=3, stride=1, pad=1), 
-            #conv4 = L.Convolution2D(in_channels=512, out_channels=512, ksize=3, stride=1, pad=1), 
-
+            #conv4 = L.Convolution2D(in_channels=512, out_channels=512, ksize=3, stride=1, pad=1),  # for CHAR +2
             l1 = L.Linear(26624, 4096)
         )
 
     def __call__(self, x):
-        h = F.relu(self.conv1(x))
+        #print("current train status:")
+        #print(chainer.config.train)
+        h = F.dropout(F.relu(self.conv1(x)), ratio=DROP_OUT_RATIO)
         h = F.max_pooling_2d(h, 2)
 
-        h = F.relu(self.conv2(h))
+        h = F.dropout(F.relu(self.conv2(h)), ratio=DROP_OUT_RATIO)
         h = F.max_pooling_2d(h, 2)
 
-        h = F.relu(self.conv3_1(h))
-        #h = F.relu(self.conv3_2(h))
+        h = F.dropout(F.relu(self.conv3_1(h)), ratio=DROP_OUT_RATIO)
+        #h = F.relu(self.conv3_2(h)) # for CHAR +2
         h = F.max_pooling_2d(h, 2)
 
-        h = F.relu(self.conv4(h))
-        h = F.relu(self.l1(h))
+        h = F.dropout(F.relu(self.conv4(h)), ratio=DROP_OUT_RATIO)
+        h = F.dropout(F.relu(self.l1(h)), ratio=DROP_OUT_RATIO)
         return h
 
 
@@ -58,7 +59,7 @@ class Classifier(Chain):
         )
 
     def predict(self, x):
-        #y = self.linear1(x)
+        #y = F.dropout(F.relu(self.linear1(x)), ratio=DROP_OUT_RATIO) # fro CHAR +2
         y = self.linear2(x)
         return y
 
@@ -109,14 +110,14 @@ for i in range(0, OUTPUT_NUM):
     cl_optimizers.append(cl_optimizer)
 
 updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
-trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 
-print("start running")
+trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
-#trainer.extend(sample_recog(trainer, test_data))
-trainer.extend(sample_result(TextImageDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu)))
+trainer.extend(sample_result(TextImageDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu),output_dir=args.output))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'validation/0/loss', 'validation/3/loss', '3/loss', 'validation/5/loss']))
 trainer.extend(extensions.ProgressBar())
+print("start running")
 trainer.run()
+
 print("end running")

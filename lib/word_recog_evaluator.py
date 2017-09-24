@@ -1,6 +1,7 @@
 import copy
 import six
 import random
+import chainer
 from chainer import configuration
 from chainer.dataset import convert
 from chainer.dataset import iterator as iterator_module
@@ -28,6 +29,7 @@ class WordRecogEvaluator(extensions.Evaluator):
         self.eval_func = eval_func
 
     def evaluate(self):
+        chainer.using_config('train', False)
         iterator = self._iterators['main']
         targets = self._targets
 

@@ -30,6 +30,7 @@ class WordRecogUpdater(training.StandardUpdater):
         self.iteration = 0
 
     def update_core(self):
+        chainer.using_config('train', True)
         iterator = self._iterators['main'].next()
         in_arrays = self.converter(iterator, self.device)
 

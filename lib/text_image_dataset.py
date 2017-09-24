@@ -100,9 +100,11 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
         w, h = text_w, 32 #fixed
         
         
-        im = Image.new('RGB', (w, h), (255,255,255))
+        #im = Image.new('RGB', (w, h), (255,255,255)) # RGB
+        im = Image.new('L', (w, h), 30) #Greyscale
         draw = ImageDraw.Draw(im)
-        draw.text((text_x, text_y), text, fill=(0,100,80), font=font)
+        #draw.text((text_x, text_y), text, fill=(0,100,80), font=font) # RGB
+        draw.text((text_x, text_y), text, fill=(230), font=font)
 
         #im = im.resize((32*6, 32))
         im = im.resize((100, 32))
@@ -120,7 +122,14 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
         if self._flatten:
             image_array = image_array.flatten()
         image_array = image_array.astype('float32')
-        image_array = image_array.transpose(2, 1, 0) #HWC to CHW
+        
+        if im.mode == "RGB":
+            image_array = image_array.transpose(2, 1, 0) #HWC to CHW
+        elif im.mode == "L":
+            image_array = image_array[np.newaxis,:]
+        else:
+            raise ValueError
+
         if self._device >= 0:
             image_array = chainer.cuda.to_gpu(image_array)
         return image_array
