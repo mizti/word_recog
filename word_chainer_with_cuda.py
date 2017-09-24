@@ -62,23 +62,20 @@ if __name__ == '__main__':
       parser.add_argument('--gpu', '-g', type=int, default=-1, help='GPU ID (negative value indicates CPU)')
       parser.add_argument('--model_snapshot', '-m', default=None, help='Filename of model snapshot')
       parser.add_argument('--output', '-o', default='result', help='Sampling iteration for each test data')
-      #parser.add_argument('--debug', '-debug', default=None, help='debug mode')
       parser.add_argument('--debug', '-de', action="store_true", help='debug mode')
-      #parser.add_argument('--data_dir', '-d', default='data', help='directory of pretrain models and image data')
-      #parser.add_argument('--net', '-n', default='GoogLeNet', help='Choose network to use for prediction')
-      #parser.add_argument('--iteration', '-t', type=int, default=1, help='Sampling iteration for each test data')
       args = parser.parse_args()
 
 if args.debug:
     print("debug mode")
-    train_data = TextImageDataset(100, max_length=OUTPUT_NUM, train=True, device=args.gpu)
-    test_data = TextImageDataset(100, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    train_data = TextImageDataset(10, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    test_data = TextImageDataset(10, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    train_iter = iterators.SerialIterator(train_data, batch_size=5, shuffle=True)
+    test_iter = iterators.SerialIterator(test_data, batch_size=5, repeat=False, shuffle=False)
 else:
-    train_data = TextImageDataset(10000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
-    test_data = TextImageDataset(1000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
-
-train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
-test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
+    train_data = TextImageDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    test_data = TextImageDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
+    test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
 
 
 base_cnn = CNN()
