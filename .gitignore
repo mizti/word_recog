@@ -15,3 +15,4 @@ data/*
 *.swp
 *.pyc
 nohup.out
+*.h5
