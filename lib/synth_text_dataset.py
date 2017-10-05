@@ -9,7 +9,11 @@ import h5py
 import numpy as np
 import string
 import chainer
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    pass
+
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
