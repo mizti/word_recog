@@ -9,13 +9,15 @@ import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
 from lib.text_image_dataset import *
+from lib.synth_text_dataset import *
 from lib.word_recog_updater import *
 from lib.word_recog_evaluator import *
 from lib.sample_result import *
 from lib.decay_lr import * 
 
 #OUTPUT_NUM = 6
-OUTPUT_NUM = 8
+#OUTPUT_NUM = 8
+OUTPUT_NUM = 32
 DROP_OUT_RATIO = 0.05
 
 class CNN(Chain):
@@ -35,6 +37,10 @@ class CNN(Chain):
         )
 
     def __call__(self, x):
+        #print("x")
+        #print(x.__class__)
+        #print(x.shape)
+        #print(x)
         #print("current train status:")
         #print(chainer.config.train)
         h = F.dropout(F.relu(self.conv1(x)), ratio=DROP_OUT_RATIO)
@@ -56,7 +62,7 @@ class Classifier(Chain):
     def __init__(self):
         super(Classifier, self).__init__(
             linear1 = L.Linear(4096,4096),
-            linear2 = L.Linear(4096,38) 
+            linear2 = L.Linear(4096,41) #len(CHARS) + 1
         )
 
     def predict(self, x):
@@ -65,6 +71,9 @@ class Classifier(Chain):
         return y
 
     def __call__(self, x, t):
+        #print("t")
+        #print(t.__class__)
+        #print(t)
         y = self.predict(x)
         loss = F.softmax_cross_entropy(y, t)
         accuracy = F.accuracy(y, t)
@@ -79,15 +88,21 @@ if __name__ == '__main__':
       parser.add_argument('--debug', '-de', action="store_true", help='debug mode')
       args = parser.parse_args()
 
+
 if args.debug:
     print("debug mode")
-    train_data = TextImageDataset(10, max_length=OUTPUT_NUM, train=True, device=args.gpu)
-    test_data = TextImageDataset(10, max_length=OUTPUT_NUM, train=False, device=args.gpu)
-    train_iter = iterators.SerialIterator(train_data, batch_size=5, shuffle=True)
-    test_iter = iterators.SerialIterator(test_data, batch_size=5, repeat=False, shuffle=False)
+    #train_data = TextImageDataset(5, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    #test_data = TextImageDataset(5, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    train_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
+    test_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=True, device=args.gpu)
+
+    train_iter = iterators.SerialIterator(train_data, batch_size=2, shuffle=True)
+    test_iter = iterators.SerialIterator(test_data, batch_size=2, repeat=False, shuffle=False)
 else:
-    train_data = TextImageDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
-    test_data = TextImageDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    #train_data = TextImageDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    #test_data = TextImageDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    train_data = SynthTextDataset(validation=False, device=args.gpu)
+    test_data = SynthTextDataset(validation=True, device=args.gpu)
     train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
     test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
 
@@ -114,7 +129,9 @@ updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer
 
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
-trainer.extend(sample_result(TextImageDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu),output_dir=args.output))
+#trainer.extend(sample_result(TextImageDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu),output_dir=args.output))
+#trainer.extend(sample_result(SynthTextDataset(1, max_length=OUTPUT_NUM, validation=True, device=args.gpu),output_dir=args.output))
+trainer.extend(sample_result, test_data, output_dir=args.output)
 trainer.extend(decay_lr(decay_rate=0.98))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'validation/0/loss', 'validation/3/loss', '3/loss', 'validation/5/loss']))

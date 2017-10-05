@@ -24,7 +24,6 @@ class WordRecogUpdater(training.StandardUpdater):
         for i in range(0, len(cl_optimizers)):
             self._optimizers[str(i)] = cl_optimizers[i]
 
-
         self.converter = convert.concat_examples
         self.device = device
         self.iteration = 0

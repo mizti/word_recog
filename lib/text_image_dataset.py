@@ -133,5 +133,6 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
         if self._device >= 0:
             image_array = chainer.cuda.to_gpu(image_array)
         return image_array
-        
-train_data = TextImageDataset(10, max_length=8, train=True) 
+
+if __name__ == '__main__':        
+    train_data = TextImageDataset(10, max_length=8, train=True) 

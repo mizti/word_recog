@@ -7,10 +7,14 @@ except ImportError:
 from chainer import Variable
 
 # returns 0~9: number / 10: space / 11~36: upper case /37: empty
-CHARS = "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#CHARS = "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+CHARS = "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ.'/" #40 chars
 EMPTY_CODE=len(CHARS)
 
 def text_to_label(text, length=0 ,device=-1):
+    #print(text)
+    if length > 0 and len(text)>length:
+        raise ValueError("text length exceeds expected max length!")
     label = []
     for index, c in enumerate(text):
         label.append(char_to_int(c))
