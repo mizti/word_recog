@@ -14,8 +14,6 @@ EMPTY_CODE=len(CHARS)
 def text_to_label(text, length=0 ,device=-1):
     #print(text)
     if length > 0 and len(text)>length:
-        print(text)
-        print(length)
         raise ValueError("text length exceeds expected max length!")
     label = []
     for index, c in enumerate(text):

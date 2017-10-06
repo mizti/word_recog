@@ -24,6 +24,7 @@ import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
 from utils import *
+import utils
 
 def flatten_list(txt):
     def spl(t):
@@ -52,19 +53,54 @@ class SynthTextDataset(chainer.dataset.DatasetMixin):
         self.dsets = sorted(self.db['data'].keys()) # list of filename
         self.word_list = []
         self.bookmark = [None] * len(self.dsets)
+        self.loc_dic = []
+        # check validity of image data
+        #self.dsets = filter(self.check_validity_of_image, self.dsets) #full@63799
 
         for i, filename in enumerate(self.dsets):
             words_in_file = flatten_list(self.db['data'][filename].attrs['txt'])
+            words_in_file = filter(lambda word: self.check_validity_of_word(word, filename, words_in_file), words_in_file)
             self.word_list += words_in_file
             if i > 0:
                 self.bookmark[i] = self.bookmark[i-1]+len(words_in_file)
             elif i == 0:
                 self.bookmark[i] = len(words_in_file)
 
+    def check_validity_of_image(self, filename):
+        if self.db['data'][filename][...].size == 0:
+            return False
+        return True
+
+    def check_validity_of_word(self, word, filename, words_in_file):
+        if len(word) > self.max_length:
+            return False
+        if set(word.upper()).issubset(set(utils.CHARS)) is not True:
+            return False
+
+        loc = words_in_file.index(word)
+        bb = self.db['data'][filename].attrs['wordBB'][:,:,loc]
+        bb = np.c_[bb,bb[:,0]]  
+        top = min(bb[1,0],bb[1,1])
+        bottom = max(bb[1,2],bb[1,3])
+        left = min(bb[0,0],bb[0,3])
+        right = max(bb[0,1],bb[0,2])
+
+        image_array = self.db['data'][filename][...]
+
+        if bottom < 0 or right < 0 or left < 0 or top < 0:
+            return False
+        if top > image_array.shape[0] or left > image_array.shape[1]:
+            return False
+
+        if bottom - top < 5:
+            return False
+        if right - left < 5:
+            return False
+        self.loc_dic.append([int(bottom), int(top), int(right), int(left)])
+        return True
+
     def __len__(self):
         return min(len(self.word_list),self.datanum)
-        #return min(self.datanum, len(self.word_list))
-        #return len(self.word_list)
 
     def get_example(self, i):
         image_array, label = self.get_image_and_label(i)
@@ -83,21 +119,33 @@ class SynthTextDataset(chainer.dataset.DatasetMixin):
         else:
             raise ValueError
         label = self.word_list[i]
+        print(label)
         image_file = db['data'][self.dsets[index]][...]
         wordBB = db['data'][self.dsets[index]].attrs['wordBB']
         bb = wordBB[:,:,loc_in_file]
         bb = np.c_[bb,bb[:,0]]
 
-        im = np.asarray(image_file)
+        bottom  = self.loc_dic[i][0]
+        top     = self.loc_dic[i][1]
+        right   = self.loc_dic[i][2]
+        left    = self.loc_dic[i][3]
 
-        #cut off bottom
-        im = im[:int(max(bb[1,2],bb[1,3]))]
-        #cut off top
-        im = im[int(min(bb[1,0],bb[1,1])):]
-        #cut off right
-        im = im[:,:int(max(bb[0,1],bb[0,2]))]
-        #cut off left
-        im = im[:,int(min(bb[0,0],bb[0,3])):]
+        #print(bottom)
+        #print(top)
+        #print(right)
+        #print(left)
+
+        im = np.asarray(image_file)
+        #print(im.shape)
+        #print(im.size)        
+        im = im[:bottom]
+        #print(im.size)        
+        im = im[top:]
+        #print(im.size)        
+        im = im[:,:right]
+        #print(im.size)
+        im = im[:,left:]
+        #print(im.size)
 
         im = self.adjust_image(im)
         return im, text_to_label(label.upper(), length=self.max_length)
@@ -112,15 +160,12 @@ class SynthTextDataset(chainer.dataset.DatasetMixin):
         else:
             plt.imshow(image_array)
         plt.hold(True)
-        ##plt.gca().set_xlim([max(bb[0,0],bb[0,3]), min(bb[0,1],bb[0,2])])
-        ##plt.gca().set_ylim([max(bb[1,2],bb[1,3]), min(bb[1,0],bb[1,1])])
         plt.show(block=False)
         raw_input("wait")
 
     # adjust size and format of image array
     def adjust_image(self, image_array):
 
-        #im = Image.fromarray(image_array, 'L')
         im = Image.fromarray(image_array, 'RGB')
         im = im.convert('L')
         
@@ -149,5 +194,10 @@ class SynthTextDataset(chainer.dataset.DatasetMixin):
         return image_array
 
 if __name__ == '__main__':        
-    train_data = SynthTextDataset(10) 
-    train_data.get_example(random.randint(0,30))
+    train_data = SynthTextDataset(max_length=32, validation=False) 
+    print("len")
+    print(len(train_data))
+    #for i in xrange(len(train_data)):
+    #    print(i)
+    #    train_data.get_example(i)
+    #train_data.get_example(10435)
