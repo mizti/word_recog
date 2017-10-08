@@ -119,7 +119,7 @@ class SynthTextDataset(chainer.dataset.DatasetMixin):
         else:
             raise ValueError
         label = self.word_list[i]
-        print(label)
+        #print(label)
         image_file = db['data'][self.dsets[index]][...]
         wordBB = db['data'][self.dsets[index]].attrs['wordBB']
         bb = wordBB[:,:,loc_in_file]
@@ -167,11 +167,12 @@ class SynthTextDataset(chainer.dataset.DatasetMixin):
     def adjust_image(self, image_array):
 
         im = Image.fromarray(image_array, 'RGB')
-        im = im.convert('L')
+        #im = im.convert('L')
+        #print(im.size)
         
         im = im.resize((100, 32))
     
-        im.save('result/image_train' + str(random.randint(0, 100)) + '.png')
+        #im.save('result/image_train' + str(random.randint(0, 100)) + '.png')
         image_array = np.asarray(im)
         
         if self.flatten:

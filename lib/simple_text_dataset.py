@@ -18,8 +18,9 @@ import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
 from utils import *
+import utils
 
-class TextImageDataset(chainer.dataset.DatasetMixin):
+class SimpleTextDataset(chainer.dataset.DatasetMixin):
     def __init__(self, datanum=10, max_length=6, normalize=True, flatten=False, train=True, device=-1):
         self._normalize = normalize
         self._flatten = flatten
@@ -40,20 +41,19 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
         #length = 6
         length = max(random.randrange(2,self._max_length), random.randrange(2,self._max_length))
         text = self.generate_random_string(length)
-        #print(text)
-
-        # text to image
-        image_array = self.text_to_image(text)
 
         # text to label
         label = text_to_label(text, length=self._max_length)
-        return image_array, label
+        #return image_array, label
+        return text, label
 
     def get_example(self, i):
-        image_array, label = self._pairs[i][0], self._pairs[i][1]
+        # text to image
+        image_array, label = self.text_to_image(self._pairs[i][0]), self._pairs[i][1]
         return image_array, label
 
-    def generate_random_string(self, size=6, chars=string.ascii_uppercase + string.digits + ' '):
+    #def generate_random_string(self, size=6, chars=string.ascii_uppercase + string.digits + ' ./\''):
+    def generate_random_string(self, size=6, chars=utils.CHARS):
         return ''.join(random.choice(chars) for _ in range(size))
 
     #def text_to_label(self, text):
@@ -100,11 +100,11 @@ class TextImageDataset(chainer.dataset.DatasetMixin):
         w, h = text_w, 32 #fixed
         
         
-        #im = Image.new('RGB', (w, h), (255,255,255)) # RGB
-        im = Image.new('L', (w, h), 30) #Greyscale
+        im = Image.new('RGB', (w, h), (255,255,255)) # RGB
+        #im = Image.new('L', (w, h), 30) #Greyscale 
         draw = ImageDraw.Draw(im)
-        #draw.text((text_x, text_y), text, fill=(0,100,80), font=font) # RGB
-        draw.text((text_x, text_y), text, fill=(230), font=font)
+        draw.text((text_x, text_y), text, fill=(0,100,80), font=font) # RGB
+        #draw.text((text_x, text_y), text, fill=(230), font=font) # L
 
         #im = im.resize((32*6, 32))
         im = im.resize((100, 32))

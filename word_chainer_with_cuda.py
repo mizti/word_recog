@@ -8,7 +8,7 @@ from chainer import Link, Chain, ChainList
 import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
-from lib.text_image_dataset import *
+from lib.simple_text_dataset import *
 from lib.synth_text_dataset import *
 from lib.word_recog_updater import *
 from lib.word_recog_evaluator import *
@@ -17,22 +17,22 @@ from lib.decay_lr import *
 
 #OUTPUT_NUM = 6
 #OUTPUT_NUM = 8
-OUTPUT_NUM = 32
+OUTPUT_NUM = 16
 DROP_OUT_RATIO = 0.05
 
 class CNN(Chain):
     def __init__(self):
         super(CNN, self).__init__(
-            conv1 = L.Convolution2D(in_channels=1, out_channels=64, ksize=5, stride=1, pad=2), 
-            #conv1 = L.Convolution2D(in_channels=3, out_channels=64, ksize=5, stride=1, pad=2), 
+            conv1 = L.Convolution2D(in_channels=3, out_channels=64, ksize=5, stride=1, pad=2), # for RGB
+            #conv1 = L.Convolution2D(in_channels=1, out_channels=64, ksize=5, stride=1, pad=2),  # for L
             norm1 = L.BatchNormalization(64),
             conv2 = L.Convolution2D(in_channels=64, out_channels=128, ksize=3, stride=1, pad=1), 
             norm2 = L.BatchNormalization(128),
             conv3_1 = L.Convolution2D(in_channels=128, out_channels=256, ksize=3, stride=1, pad=1), 
             conv3_2 = L.Convolution2D(in_channels=256, out_channels=512, ksize=3, stride=1, pad=1), 
             norm3 = L.BatchNormalization(256),
-            conv4 = L.Convolution2D(in_channels=256, out_channels=512, ksize=3, stride=1, pad=1), 
-            #conv4 = L.Convolution2D(in_channels=512, out_channels=512, ksize=3, stride=1, pad=1),  # for CHAR +2
+            #conv4 = L.Convolution2D(in_channels=256, out_channels=512, ksize=3, stride=1, pad=1), # for CHAR
+            conv4 = L.Convolution2D(in_channels=512, out_channels=512, ksize=3, stride=1, pad=1),  # for CHAR +2
             l1 = L.Linear(26624, 4096)
         )
 
@@ -50,7 +50,7 @@ class CNN(Chain):
         h = F.max_pooling_2d(h, 2)
 
         h = F.dropout(F.relu(self.conv3_1(h)), ratio=DROP_OUT_RATIO)
-        #h = F.relu(self.conv3_2(h)) # for CHAR +2
+        h = F.relu(self.conv3_2(h)) # for CHAR +2
         h = F.max_pooling_2d(h, 2)
 
         h = F.dropout(F.relu(self.conv4(h)), ratio=DROP_OUT_RATIO)
@@ -62,11 +62,11 @@ class Classifier(Chain):
     def __init__(self):
         super(Classifier, self).__init__(
             linear1 = L.Linear(4096,4096),
-            linear2 = L.Linear(4096,41) #len(CHARS) + 1
+            linear2 = L.Linear(4096,38) #len(CHARS) + 1
         )
 
     def predict(self, x):
-        #y = F.dropout(F.relu(self.linear1(x)), ratio=DROP_OUT_RATIO) # fro CHAR +2
+        y = F.dropout(F.relu(self.linear1(x)), ratio=DROP_OUT_RATIO) # fro CHAR +2
         y = self.linear2(x)
         return y
 
@@ -91,16 +91,15 @@ if __name__ == '__main__':
 
 if args.debug:
     print("debug mode")
-    #train_data = TextImageDataset(5, max_length=OUTPUT_NUM, train=True, device=args.gpu)
-    #test_data = TextImageDataset(5, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    #train_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    #test_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=False, device=args.gpu)
     train_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
     test_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=True, device=args.gpu)
-
     train_iter = iterators.SerialIterator(train_data, batch_size=2, shuffle=True)
     test_iter = iterators.SerialIterator(test_data, batch_size=2, repeat=False, shuffle=False)
 else:
-    #train_data = TextImageDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
-    #test_data = TextImageDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    #train_data = SimpleTextDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    #test_data = SimpleTextDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
     train_data = SynthTextDataset(validation=False, max_length=OUTPUT_NUM, device=args.gpu)
     test_data = SynthTextDataset(validation=True, max_length=OUTPUT_NUM, device=args.gpu)
     train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
@@ -125,18 +124,21 @@ for i in range(0, OUTPUT_NUM):
     classifiers.append(cl)
     cl_optimizers.append(cl_optimizer)
 
-updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
 
+updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 trainer.extend(WordRecogEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
-#trainer.extend(sample_result(TextImageDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu),output_dir=args.output))
+#trainer.extend(sample_result(SimpleTextDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu),output_dir=args.output))
 #trainer.extend(sample_result(SynthTextDataset(1, max_length=OUTPUT_NUM, validation=True, device=args.gpu),output_dir=args.output))
 trainer.extend(sample_result(test_data, output_dir=args.output))
 trainer.extend(decay_lr(decay_rate=0.98))
 trainer.extend(extensions.LogReport())
-trainer.extend(extensions.PrintReport(['epoch', 'validation/0/loss', 'validation/3/loss', '3/loss', 'validation/5/loss']))
+trainer.extend(extensions.PrintReport(['epoch', 'validation/0/accuracy', 'validation/3/accuracy', '3/loss', 'validation/5/accuracy']))
 trainer.extend(extensions.ProgressBar())
+if args.model_snapshot is not None:
+    trainer.extend(extensions.snapshot_object(base_cnn, 'base_cnn_epoch_{.updater.epoch}.npz'), trigger=(args.model_snapshot, 'epoch'))
+    for i, cl in enumerate(classifiers):
+        trainer.extend(extensions.snapshot_object(cl, 'classifier' + str(i) + '_epoch_{.updater.epoch}.npz'), trigger=(args.model_snapshot, 'epoch'))
 print("start running")
 trainer.run()
-
 print("end running")
