@@ -20,7 +20,7 @@ import lib.utils
 #OUTPUT_NUM = 6
 #OUTPUT_NUM = 8
 OUTPUT_NUM = 20
-DROP_OUT_RATIO = 0.05
+DROP_OUT_RATIO = 0.1
 
 class CNN(Chain):
     def __init__(self):
@@ -102,6 +102,7 @@ if args.debug:
     train_iter = iterators.SerialIterator(train_data, batch_size=2, shuffle=True)
     test_iter = iterators.SerialIterator(test_data, batch_size=2, repeat=False, shuffle=False)
     test_iter2 = iterators.SerialIterator(test_data2, batch_size=2, repeat=False, shuffle=False)
+
 else:
     #train_data = SimpleTextDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
     #test_data = SimpleTextDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
@@ -132,18 +133,13 @@ for i in range(0, OUTPUT_NUM):
     classifiers.append(cl)
     cl_optimizers.append(cl_optimizer)
 
-
 updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
-trainer.extend(WordRecogEvaluator('validation1', test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
-trainer.extend(WordRecogEvaluator('validation2', test_iter2, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
-#trainer.extend(TestEvaluator(test_iter, base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
-#trainer.extend(sample_result(SimpleTextDataset(1, max_length=OUTPUT_NUM, train=False, device=args.gpu),output_dir=args.output))
-#trainer.extend(sample_result(SynthTextDataset(1, max_length=OUTPUT_NUM, validation=True, device=args.gpu),output_dir=args.output))
-trainer.extend(sample_result(test_data, output_dir=args.output))
+trainer.extend(WordRecogEvaluator([test_iter, test_iter2], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 trainer.extend(decay_lr(decay_rate=0.98))
 trainer.extend(extensions.LogReport())
-trainer.extend(extensions.PrintReport(['epoch', 'validation1/levenstein_distance', 'validation2/levenstein_distance', 'validation_1/5/accuracy', 'validation/5/accuracy']))
+#trainer.extend(extensions.PrintReport(['epoch', 'validation1/levenstein_distance', 'validation2/levenstein_distance', 'validation_1/5/accuracy', 'validation/5/accuracy']))
+trainer.extend(extensions.PrintReport(['epoch', 'synth/avg_loss', 'synth/levenstein_distance', 'simple/avg_loss', 'simple/levenstein_distance', 'validation/5/accuracy']))
 trainer.extend(extensions.ProgressBar())
 if args.model_snapshot is not None:
     trainer.extend(extensions.snapshot_object(base_cnn, 'base_cnn_epoch_{.updater.epoch}.npz'), trigger=(args.model_snapshot, 'epoch'))
