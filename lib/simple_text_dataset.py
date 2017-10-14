@@ -105,7 +105,6 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         #    'Times New Roman.ttf'
         #]
         fonts = [
-            'Eorzea.ttf',
             'EorzeaExtended.ttf',
             'EorzeanCompact.otf',
             'EorzeanElegant.ttf',
@@ -160,7 +159,8 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         return image_array
 
 if __name__ == '__main__':        
-    train_data = SimpleTextDataset(2, max_length=8, train=True) 
+    train_data = SimpleTextDataset(100, max_length=8, train=True) 
     for i in range(len(train_data)):
         print(" ")
-        train_data.get_example(i)
+        image_array, label = train_data.get_example(i)
+        print(label)
