@@ -1,6 +1,7 @@
 import copy
 import six
 import random
+import distance
 import chainer
 from chainer import configuration
 from chainer.dataset import convert
@@ -10,13 +11,14 @@ from chainer import link
 from chainer import reporter as reporter_module
 #from chainer.training import extension
 from chainer.training import extensions
-#from lib.utils import *
+from lib.utils import *
 
 class WordRecogEvaluator(extensions.Evaluator):
     default_name='validation'
-    def __init__(self, iterator, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None):
+    def __init__(self, dname, iterator, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None):
         if isinstance(iterator, iterator_module.Iterator):
             iterator = {'main': iterator}
+        self.dname = dname
         self._iterators = iterator
         self.base_cnn = base_cnn
         self._targets = {}
@@ -45,18 +47,31 @@ class WordRecogEvaluator(extensions.Evaluator):
 
         summary = reporter_module.DictSummary()
 
-        for batch in it:
+        for i, batch in enumerate(it):
             observation = {}
             with reporter_module.report_scope(observation):
                 in_arrays = self.converter(batch, self.device)
                 with function.no_backprop_mode():
                     h = self.base_cnn(in_arrays[0])
-                    recoged_word = []
+                    predicted_words = []
+                    loss = 0
+                    l_distance = 0
+                    loss = []
                     for name, cl in six.iteritems(targets):
-                        loss = cl(h, in_arrays[1][:,int(name)])
-                        recoged_word.append(cl.predict(h).data[0].argmax())
-                    labeled_word = in_arrays[1][0]
-                    #print("label: " + label_to_text(labeled_word))
-                    #print("recog: " + label_to_text(recoged_word))
+                        loss.append(cl(h, in_arrays[1][:,int(name)]))
+                        #print(loss)
+                        predicted_words.append(cl.predict(h))
+                    avg_loss = sum(loss) / len(loss)
+                    summary.add({self.dname + '/avg_loss': avg_loss})
+                    for i in range(len(in_arrays[0])):
+                        recoged_word = []
+                        recoged = label_to_text(map(lambda x:x.data[i].argmax(), predicted_words))
+                        label = label_to_text(in_arrays[1][i])
+                        #print("recog: " + recoged)
+                        #print("label: " + label)
+                        l_distance = distance.levenshtein(recoged, label)
+                        summary.add({self.dname + '/levenstein_distance': float(l_distance)})
+
             summary.add(observation)
+            #print(summary.compute_mean())
         return summary.compute_mean()

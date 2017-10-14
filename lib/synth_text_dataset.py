@@ -28,7 +28,8 @@ import utils
 
 def flatten_list(txt):
     def spl(t):
-        return t.split("\n")
+        #return t.split("\n")
+        return t.split() #not only \n but also space
     flatten = lambda l: [item for sublist in l for item in sublist]
     txt = map(spl, txt)
     txt = flatten(txt)

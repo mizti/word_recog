@@ -36,6 +36,19 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
     def __len__(self):
         return len(self._pairs)
 
+    def color_distance(self, color1, color2):
+        # TBD: use CIEDE2000 for color distance
+        distance = abs(color1[0] - color2[0]) + abs(color1[1] - color2[1]) + abs(color1[2] - color2[2])
+        return distance
+
+    def get_colors(self, min_offset=100):
+        background_color = (0,0,0)
+        text_color = (0,0,0)
+        while self.color_distance(background_color, text_color) < min_offset:
+            background_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            text_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        return background_color, text_color
+
     def generate_data(self):
         # generate text
         #length = 6
@@ -83,13 +96,23 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
     #    return ascii_code
 
     def text_to_image(self, text):
+        #fonts = [
+        #    'Arial Rounded Bold.ttf',
+        #    'Avenir.ttc',
+        #    'Bodoni 72.ttc',
+        #    'GillSans.ttc',
+        #    'HelveticaNeueDeskInterface.ttc',
+        #    'Times New Roman.ttf'
+        #]
         fonts = [
-            'Arial Rounded Bold.ttf',
-            'Avenir.ttc',
-            'Bodoni 72.ttc',
-            'GillSans.ttc',
-            'HelveticaNeueDeskInterface.ttc',
-            'Times New Roman.ttf'
+            'Eorzea.ttf',
+            'EorzeaExtended.ttf',
+            'EorzeanCompact.otf',
+            'EorzeanElegant.ttf',
+            'EorzeanFraktur.otf',
+            'EorzeanGraphite.otf',
+            'EorzeanScript.otf',
+            'EorzeanUncial.otf'
         ]
         fontFile = fonts[random.randint(0,len(fonts)-1)]
         font = ImageFont.truetype('data/'+fontFile, 30)
@@ -98,17 +121,19 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         text_w, text_h = font.getsize(text)
         text_x, text_y = 0, 0
         w, h = text_w, 32 #fixed
+
+        background_color, text_color = self.get_colors(min_offset=150)
         
-        
-        im = Image.new('RGB', (w, h), (255,255,255)) # RGB
+        im = Image.new('RGB', (w, h), background_color) # RGB
         #im = Image.new('L', (w, h), 30) #Greyscale 
         draw = ImageDraw.Draw(im)
-        draw.text((text_x, text_y), text, fill=(0,100,80), font=font) # RGB
+        draw.text((text_x, text_y), text, fill=text_color, font=font) # RGB
+
         #draw.text((text_x, text_y), text, fill=(230), font=font) # L
 
         #im = im.resize((32*6, 32))
         im = im.resize((100, 32))
-    
+
         #if self._train:
         #   im.save('result/image_train' + str(random.randint(0, 100)) + '.png')
         #else:
@@ -135,4 +160,7 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         return image_array
 
 if __name__ == '__main__':        
-    train_data = TextImageDataset(10, max_length=8, train=True) 
+    train_data = SimpleTextDataset(2, max_length=8, train=True) 
+    for i in range(len(train_data)):
+        print(" ")
+        train_data.get_example(i)

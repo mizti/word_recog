@@ -14,3 +14,4 @@ python-dateutil==2.6.0
 pytz==2016.7
 configuration==0.4.2
 h5py
+distance
