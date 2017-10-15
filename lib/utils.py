@@ -47,8 +47,11 @@ def label_to_text(label):
     char_list = list(CHARS)
     ret = ""
     for i in label:
+        if isinstance(i, cupy.core.core.ndarray):
+            i = int(i)
         if i >= len(CHARS): #if i exceeds the lenghth of CHARS, it is ""
             ret = ret + "" # same to do nothing
         else:
             ret = ret + char_list[i]
+            #print(ret)
     return ret

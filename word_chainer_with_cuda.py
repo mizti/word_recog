@@ -93,9 +93,9 @@ if __name__ == '__main__':
 
 if args.debug:
     print("debug mode")
-    #train_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    train_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=True, device=args.gpu)
     #test_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=False, device=args.gpu)
-    train_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
+    #train_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
     test_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=True, device=args.gpu)
     test_data2 = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=False, device=args.gpu)
 
