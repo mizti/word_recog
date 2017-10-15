@@ -29,7 +29,6 @@ class WordRecogEvaluator(extensions.Evaluator):
         self.eval_func = eval_func
 
     def evaluate(self):
-        print("start eval")
         chainer.using_config('train', False) # not need: already set in __call__
 
         summary = reporter_module.DictSummary()
@@ -72,6 +71,4 @@ class WordRecogEvaluator(extensions.Evaluator):
                             summary.add({itr_name + '/levenstein_distance': float(l_distance)})
 
                 summary.add(observation)
-
-        print("end eval")
         return summary.compute_mean()
