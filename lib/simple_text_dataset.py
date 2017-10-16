@@ -139,13 +139,15 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         #   im.save('result/image_test' + str(random.randint(0, 100)) + '.png')
 
         image_array = np.asarray(im)
+        image_array = image_array.astype('float32')
+
         
-        if self._normalize:
-            image_array = image_array / np.max(image_array)
+        image_array = image_array / 255
+        #if self._normalize:
+            # TBD: minus avg of image_array 
         
         if self._flatten:
             image_array = image_array.flatten()
-        image_array = image_array.astype('float32')
         
         if im.mode == "RGB":
             image_array = image_array.transpose(2, 1, 0) #HWC to CHW

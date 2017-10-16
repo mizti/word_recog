@@ -47,23 +47,34 @@ class WordRecogEvaluator(extensions.Evaluator):
                 # make a shallow copy of iterator
                 it = copy.copy(iterator)
 
+            print("itr_name")
+            print(itr_name)
+            #print("it")
+            #print(it)
             for i, iterator in enumerate(it):
+                #print("iterator.__class__") 
+                #print(iterator.__class__)#<type 'list'>
                 observation = {}
                 with reporter_module.report_scope(observation):
                     in_arrays = self.converter(iterator, self.device)
 
                     with function.no_backprop_mode():
+                        np.set_printoptions(threshold=np.inf)
                         x_batch = self.xp.array(in_arrays[0])
                         t_batch = self.xp.array(in_arrays[1])
+                        #print("x_batch" + str(i))
+                        #print(x_batch)
                         y = self.base_cnn(x_batch)
                         predicted_words = []
                         l_distance = 0
                         loss = []
                         for name, cl in six.iteritems(targets):
+                            #print(y) # included many nan
                             cl_loss = cl(y, t_batch[:,int(name)])
+                            # print(cl_loss) # variable(nan)
                             loss.append(cl_loss)
-                            #print(loss)
                             predicted_words.append(cl.predict(y))
+                        # print(sum(loss)) # variable(nan)
                         avg_loss = sum(loss) / len(loss)
                         summary.add({itr_name + '/avg_loss': avg_loss})
                         for i in range(len(in_arrays[0])):

@@ -153,7 +153,6 @@ if args.model_snapshot is not None:
     for i, cl in enumerate(classifiers):
         trainer.extend(extensions.snapshot_object(cl, 'classifier' + str(i) + '_epoch_{.updater.epoch}.npz'), trigger=(args.model_snapshot, 'epoch'))
 
-
 if args.resume:
     # Resume from a snapshot
     print("resume from " + args.resume)
