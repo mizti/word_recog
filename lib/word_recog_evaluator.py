@@ -3,6 +3,7 @@ import six
 import random
 import distance
 import chainer
+from chainer import cuda
 from chainer import configuration
 from chainer.dataset import convert
 from chainer.dataset import iterator as iterator_module
@@ -14,7 +15,7 @@ from chainer.training import extensions
 from lib.utils import *
 
 class WordRecogEvaluator(extensions.Evaluator):
-    default_name='validation'
+    default_name='myval'
     def __init__(self, iterator_list, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None):
         iterators = {'synth': iterator_list[0], 'simple': iterator_list[1]}
         self._iterators = iterators
@@ -27,6 +28,7 @@ class WordRecogEvaluator(extensions.Evaluator):
         self.device = device
         self.eval_hook = eval_hook
         self.eval_func = eval_func
+        self.xp = np if int(self.device) == -1 else cuda.cupy
 
     def evaluate(self):
         chainer.using_config('train', False) # not need: already set in __call__
@@ -45,20 +47,23 @@ class WordRecogEvaluator(extensions.Evaluator):
                 # make a shallow copy of iterator
                 it = copy.copy(iterator)
 
-            for i, batch in enumerate(it):
+            for i, iterator in enumerate(it):
                 observation = {}
                 with reporter_module.report_scope(observation):
-                    in_arrays = self.converter(batch, self.device)
+                    in_arrays = self.converter(iterator, self.device)
+
                     with function.no_backprop_mode():
-                        h = self.base_cnn(in_arrays[0])
+                        x_batch = self.xp.array(in_arrays[0])
+                        t_batch = self.xp.array(in_arrays[1])
+                        y = self.base_cnn(x_batch)
                         predicted_words = []
                         l_distance = 0
                         loss = []
                         for name, cl in six.iteritems(targets):
-                            cl_loss = cl(h, in_arrays[1][:,int(name)])
+                            cl_loss = cl(y, t_batch[:,int(name)])
                             loss.append(cl_loss)
                             #print(loss)
-                            predicted_words.append(cl.predict(h))
+                            predicted_words.append(cl.predict(y))
                         avg_loss = sum(loss) / len(loss)
                         summary.add({itr_name + '/avg_loss': avg_loss})
                         for i in range(len(in_arrays[0])):
