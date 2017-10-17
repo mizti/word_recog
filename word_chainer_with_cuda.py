@@ -46,17 +46,25 @@ class CNN(Chain):
         #print("current train status:")
         #print(chainer.config.train)
         h = F.dropout(F.relu(self.conv1(x)), ratio=DROP_OUT_RATIO)
+        print_debug(h, "@base_cnn0")
         h = F.max_pooling_2d(h, 2)
 
         h = F.dropout(F.relu(self.conv2(h)), ratio=DROP_OUT_RATIO)
         h = F.max_pooling_2d(h, 2)
+        print_debug(h, "@base_cnn1")
 
         h = F.dropout(F.relu(self.conv3_1(h)), ratio=DROP_OUT_RATIO)
         h = F.relu(self.conv3_2(h)) # for CHAR +2
         h = F.max_pooling_2d(h, 2)
+        print_debug(h, "@base_cnn4")
 
         h = F.dropout(F.relu(self.conv4(h)), ratio=DROP_OUT_RATIO)
-        h = F.dropout(F.relu(self.l1(h)), ratio=DROP_OUT_RATIO)
+        print_debug(h, "@base_cnn6")
+        #h = F.dropout(F.relu(self.l1(h)), ratio=DROP_OUT_RATIO)
+        h = self.l1(h)
+        print_debug(h, "@base_cnn7")
+        h = F.dropout(F.relu(h), ratio=DROP_OUT_RATIO)
+        print_debug(h, "@base_cnn8")
         return h
 
 
@@ -96,7 +104,7 @@ if args.debug:
     print("debug mode")
     train_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=True, device=args.gpu)
     #test_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=False, device=args.gpu)
-    #train_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
+    #train_data = SynthTextDataset(datanum=50, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
     #test_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=True, device=args.gpu)
     test_data = SimpleTextDataset(80, max_length=OUTPUT_NUM, train=False, device=args.gpu)
     test_data2 = SimpleTextDataset(80, max_length=OUTPUT_NUM, train=False, device=args.gpu)

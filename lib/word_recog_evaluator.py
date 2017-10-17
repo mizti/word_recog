@@ -55,13 +55,16 @@ class WordRecogEvaluator(extensions.Evaluator):
                         np.set_printoptions(threshold=np.inf)
                         x_batch = self.xp.array(in_arrays[0])
                         t_batch = self.xp.array(in_arrays[1])
+                        print_debug(x_batch, "@x_batch")
                         y = self.base_cnn(x_batch)
+                        print_debug(y, "@after_base_cnn")
                         predicted_words = []
                         l_distance = 0
                         loss = []
                         for name, cl in six.iteritems(targets):
                             cl_loss = cl(y, t_batch[:,int(name)])
                             loss.append(cl_loss)
+                            print_debug(cl_loss, "@cl_loss")
                             predicted_words.append(cl.predict(y))
                         avg_loss = sum(loss) / len(loss)
                         summary.add({itr_name + '/avg_loss': avg_loss})

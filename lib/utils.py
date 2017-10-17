@@ -55,3 +55,29 @@ def label_to_text(label):
             ret = ret + char_list[i]
             #print(ret)
     return ret
+
+def print_debug(t, place=""):
+    if isinstance(t, Variable):
+        if isinstance(t.data, cupy.core.core.ndarray):
+            xp = cupy
+        else:
+            xp = numpy
+        if not xp.isnan(t.data).any():
+            return
+        else:
+            print("NaN detected")
+    elif isinstance(t, cupy.core.core.ndarray):
+        if isinstance(t, cupy.core.core.ndarray):
+            xp = cupy
+        else:
+            xp = numpy
+        if not xp.isnan(t).any():
+            return
+        else:
+            print("NaN detected")
+
+    with open('result/debug.txt', 'a') as f:
+        print(t.__class__)
+        f.write(place + '\n')
+        #f.write(str(t) + '\n')
+        f.write("------\n")
