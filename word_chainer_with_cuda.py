@@ -137,7 +137,7 @@ updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 trainer.extend(WordRecogEvaluator([test_iter, test_iter2], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 trainer.extend(decay_lr(decay_rate=0.98))
-trainer.extend(extensions.LogReport())
+trainer.extend(extensions.LogReport(log_name='log.txt'))
 #trainer.extend(extensions.PrintReport(['epoch', 'validation1/levenstein_distance', 'validation2/levenstein_distance', 'validation_1/5/accuracy', 'validation/5/accuracy']))
 trainer.extend(extensions.PrintReport(['epoch', 'synth/avg_loss', 'synth/levenstein_distance', 'simple/avg_loss', 'simple/levenstein_distance', 'validation/5/accuracy']))
 trainer.extend(extensions.ProgressBar())
