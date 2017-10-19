@@ -105,7 +105,6 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         #    'Times New Roman.ttf'
         #]
         fonts = [
-            'Eorzea.ttf',
             'EorzeaExtended.ttf',
             'EorzeanCompact.otf',
             'EorzeanElegant.ttf',
@@ -140,13 +139,15 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         #   im.save('result/image_test' + str(random.randint(0, 100)) + '.png')
 
         image_array = np.asarray(im)
+        image_array = image_array.astype('float32')
+
         
-        if self._normalize:
-            image_array = image_array / np.max(image_array)
+        image_array = image_array / 255
+        #if self._normalize:
+            # TBD: minus avg of image_array 
         
         if self._flatten:
             image_array = image_array.flatten()
-        image_array = image_array.astype('float32')
         
         if im.mode == "RGB":
             image_array = image_array.transpose(2, 1, 0) #HWC to CHW
@@ -160,7 +161,8 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         return image_array
 
 if __name__ == '__main__':        
-    train_data = SimpleTextDataset(2, max_length=8, train=True) 
+    train_data = SimpleTextDataset(100, max_length=8, train=True) 
     for i in range(len(train_data)):
         print(" ")
-        train_data.get_example(i)
+        image_array, label = train_data.get_example(i)
+        print(label)

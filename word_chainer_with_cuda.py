@@ -83,25 +83,27 @@ class Classifier(Chain):
         return loss
 
 if __name__ == '__main__':
-      parser = argparse.ArgumentParser()
-      parser.add_argument('--gpu', '-g', type=int, default=-1, help='GPU ID (negative value indicates CPU)')
-      parser.add_argument('--model_snapshot', '-m', type=int, default=None, help='Filename of model snapshot')
-      parser.add_argument('--output', '-o', default='result', help='Sampling iteration for each test data')
-      parser.add_argument('--debug', '-de', action="store_true", help='debug mode')
-      args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--gpu', '-g', type=int, default=-1, help='GPU ID (negative value indicates CPU)')
+    parser.add_argument('--model_snapshot', '-m', type=int, default=None, help='Filename of model snapshot')
+    parser.add_argument('--output', '-o', default='result', help='Sampling iteration for each test data')
+    parser.add_argument('--debug', '-de', action="store_true", help='debug mode')
+    parser.add_argument('--resume', '-r', default='', help='Resume the training from snapshot')
+    args = parser.parse_args()
 
 
 if args.debug:
     print("debug mode")
-    #train_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    train_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=True, device=args.gpu)
     #test_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=False, device=args.gpu)
-    train_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
-    test_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=True, device=args.gpu)
-    test_data2 = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    #train_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
+    #test_data = SynthTextDataset(datanum=5, max_length=OUTPUT_NUM, validation=True, device=args.gpu)
+    test_data = SimpleTextDataset(80, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    test_data2 = SimpleTextDataset(80, max_length=OUTPUT_NUM, train=False, device=args.gpu)
 
     train_iter = iterators.SerialIterator(train_data, batch_size=2, shuffle=True)
-    test_iter = iterators.SerialIterator(test_data, batch_size=2, repeat=False, shuffle=False)
-    test_iter2 = iterators.SerialIterator(test_data2, batch_size=2, repeat=False, shuffle=False)
+    test_iter = iterators.SerialIterator(test_data, batch_size=20, repeat=False, shuffle=False)
+    test_iter2 = iterators.SerialIterator(test_data2, batch_size=20, repeat=False, shuffle=False)
 
 else:
     #train_data = SimpleTextDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
@@ -119,6 +121,8 @@ base_cnn = CNN()
 if args.gpu >= 0:
     chainer.cuda.get_device(args.gpu).use()
     base_cnn.to_gpu()
+else:
+    base_cnn.to_cpu()
 base_cnn_optimizer = optimizers.SGD()
 base_cnn_optimizer.setup(base_cnn)
 
@@ -128,6 +132,8 @@ for i in range(0, OUTPUT_NUM):
     cl = Classifier()
     if args.gpu >= 0:
         cl.to_gpu()
+    else:
+        cl.to_cpu()
     cl_optimizer = optimizers.SGD()
     cl_optimizer.setup(cl)
     classifiers.append(cl)
@@ -136,6 +142,7 @@ for i in range(0, OUTPUT_NUM):
 updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
 trainer.extend(WordRecogEvaluator([test_iter, test_iter2], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
+
 trainer.extend(decay_lr(decay_rate=0.98))
 trainer.extend(extensions.LogReport(log_name='log.txt'))
 #trainer.extend(extensions.PrintReport(['epoch', 'validation1/levenstein_distance', 'validation2/levenstein_distance', 'validation_1/5/accuracy', 'validation/5/accuracy']))
@@ -145,6 +152,14 @@ if args.model_snapshot is not None:
     trainer.extend(extensions.snapshot_object(base_cnn, 'base_cnn_epoch_{.updater.epoch}.npz'), trigger=(args.model_snapshot, 'epoch'))
     for i, cl in enumerate(classifiers):
         trainer.extend(extensions.snapshot_object(cl, 'classifier' + str(i) + '_epoch_{.updater.epoch}.npz'), trigger=(args.model_snapshot, 'epoch'))
+
+if args.resume:
+    # Resume from a snapshot
+    print("resume from " + args.resume)
+    chainer.serializers.load_npz(args.resume + "/base_cnn_epoch_24.npz", base_cnn)
+    for i in range(0, OUTPUT_NUM):
+        chainer.serializers.load_npz(args.resume + "/classifier%s_epoch_24.npz"%str(i), classifiers[i])
+
 print("start running")
 trainer.run()
 print("end running")
