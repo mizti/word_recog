@@ -1,4 +1,5 @@
 import sys
+import datetime
 import numpy as np
 import chainer
 import argparse
@@ -63,6 +64,8 @@ class CNN(Chain):
         #h = F.dropout(F.relu(self.l1(h)), ratio=DROP_OUT_RATIO)
         h = self.l1(h)
         print_debug(h, "@base_cnn7")
+        #print_debug(self.l1.W, "@L1.W")
+        #print_debug(self.l1.b, "@L1.b")
         h = F.dropout(F.relu(h), ratio=DROP_OUT_RATIO)
         print_debug(h, "@base_cnn8")
         return h
@@ -102,6 +105,10 @@ if __name__ == '__main__':
 
 if args.debug:
     print("debug mode")
+    with open('result/debug.txt', 'w') as f:
+        f.write('%s'%datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'))
+        f.write('\n')
+
     train_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=True, device=args.gpu)
     #test_data = SimpleTextDataset(8, max_length=OUTPUT_NUM, train=False, device=args.gpu)
     #train_data = SynthTextDataset(datanum=50, max_length=OUTPUT_NUM, validation=False, device=args.gpu)
@@ -131,6 +138,7 @@ if args.gpu >= 0:
     base_cnn.to_gpu()
 else:
     base_cnn.to_cpu()
+#base_cnn_optimizer = optimizers.SGD()
 base_cnn_optimizer = optimizers.SGD()
 base_cnn_optimizer.setup(base_cnn)
 
@@ -142,6 +150,7 @@ for i in range(0, OUTPUT_NUM):
         cl.to_gpu()
     else:
         cl.to_cpu()
+    #cl_optimizer = optimizers.SGD()
     cl_optimizer = optimizers.SGD()
     cl_optimizer.setup(cl)
     classifiers.append(cl)
@@ -149,7 +158,8 @@ for i in range(0, OUTPUT_NUM):
 
 updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
-trainer.extend(WordRecogEvaluator([test_iter, test_iter2], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
+#trainer.extend(WordRecogEvaluator([test_iter, test_iter2], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
+trainer.extend(WordRecogEvaluator([test_iter], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 
 trainer.extend(decay_lr(decay_rate=0.98))
 trainer.extend(extensions.LogReport())

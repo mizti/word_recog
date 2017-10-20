@@ -61,7 +61,7 @@ def print_debug(t, place=""):
         if isinstance(t.data, cupy.core.core.ndarray):
             xp = cupy
         else:
-            xp = numpy
+            xp = np
         if not xp.isnan(t.data).any():
             return
         else:
@@ -77,7 +77,6 @@ def print_debug(t, place=""):
             print("NaN detected")
 
     with open('result/debug.txt', 'a') as f:
-        print(t.__class__)
         f.write(place + '\n')
         #f.write(str(t) + '\n')
         f.write("------\n")

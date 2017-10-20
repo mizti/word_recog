@@ -17,7 +17,8 @@ from lib.utils import *
 class WordRecogEvaluator(extensions.Evaluator):
     default_name='myval'
     def __init__(self, iterator_list, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None):
-        iterators = {'synth': iterator_list[0], 'simple': iterator_list[1]}
+        #iterators = {'synth': iterator_list[0], 'simple': iterator_list[1]}
+        iterators = {'synth': iterator_list[0]}#, 'simple': iterator_list[1]}
         self._iterators = iterators
         self.base_cnn = base_cnn
         self._targets = {} 
@@ -46,6 +47,7 @@ class WordRecogEvaluator(extensions.Evaluator):
                 # make a shallow copy of iterator
                 it = copy.copy(iterator)
 
+            print_debug('', "@evaluation")
             for batch in it:
                 observation = {}
                 with reporter_module.report_scope(observation):

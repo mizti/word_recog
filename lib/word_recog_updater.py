@@ -10,6 +10,7 @@ from chainer.dataset import convert
 from chainer.dataset import iterator as iterator_module
 from chainer.datasets import get_mnist
 from chainer import optimizer as optimizer_module
+from lib.utils import *
 
 class WordRecogUpdater(training.StandardUpdater):
     def __init__(self, iterator, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=None):
@@ -31,7 +32,8 @@ class WordRecogUpdater(training.StandardUpdater):
     def update_core(self):
         chainer.using_config('train', True)
         iterator = self._iterators['main'].next()
-        in_arrays = self.converter(iterator, self.device)
+        in_arrays = self.converter(iterator, self.device)   
+        print_debug('', "@update")
 
         xp = np if int(self.device) == -1 else cuda.cupy
         x_batch = xp.array(in_arrays[0])
@@ -41,13 +43,7 @@ class WordRecogUpdater(training.StandardUpdater):
         loss_dic = {}
         for i, classifier in enumerate(self.classifiers):
             loss = classifier(y, t_batch[:,i])
-            #print(str(i) + " " +str(loss.data))
             loss_dic[str(i)] = loss
-            #reporter.report({'loss'+str(i):loss})
-        #print("\n")
-
-        #loss_dic = {'loss1':loss1, 'loss2':loss2}
-        #reporter.report({'loss1':loss1, 'loss2':loss2})
 
         for name, optimizer in six.iteritems(self._optimizers):
             optimizer.target.cleargrads()
