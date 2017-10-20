@@ -4,6 +4,7 @@ font_files/*
 */.DS_Store
 */.DS_Store
 __pycache__/*
+lib/__pycache__/*
 temp
 result/log
 .python-version
@@ -12,3 +13,9 @@ data
 result/*
 data/*
 instance.sh
+*.swp
+*.pyc
+nohup.out
+*.h5
+*.back
+lib/*.back
