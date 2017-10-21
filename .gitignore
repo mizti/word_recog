@@ -12,6 +12,7 @@ result
 data
 result/*
 data/*
+instance.sh
 *.swp
 *.pyc
 nohup.out
