@@ -118,7 +118,8 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
 
         #size   
         text_w, text_h = font.getsize(text)
-        text_x, text_y = 0, 0
+        #text_x, text_y = 0, 0
+        text_x, text_y = random.randint(-5,5), random.randint(-5,5)
         w, h = text_w, 32 #fixed
 
         background_color, text_color = self.get_colors(min_offset=150)
@@ -145,6 +146,7 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
         image_array = image_array / 255
         #if self._normalize:
             # TBD: minus avg of image_array 
+        image_array = image_array - image_array.mean()
         
         if self._flatten:
             image_array = image_array.flatten()

@@ -17,7 +17,8 @@ from lib.utils import *
 class WordRecogEvaluator(extensions.Evaluator):
     default_name='myval'
     def __init__(self, iterator_list, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None):
-        iterators = {'synth': iterator_list[0], 'simple': iterator_list[1]}
+        #iterators = {'synth': iterator_list[0], 'simple': iterator_list[1]}
+        iterators = {'simple': iterator_list[0]}
         self._iterators = iterators
         self.base_cnn = base_cnn
         self._targets = {} 

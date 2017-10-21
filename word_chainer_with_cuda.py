@@ -106,15 +106,15 @@ if args.debug:
     test_iter2 = iterators.SerialIterator(test_data2, batch_size=20, repeat=False, shuffle=False)
 
 else:
-    #train_data = SimpleTextDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
-    #test_data = SimpleTextDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
-    train_data = SynthTextDataset(validation=False, max_length=OUTPUT_NUM, device=args.gpu)
-    test_data = SynthTextDataset(validation=True, max_length=OUTPUT_NUM, device=args.gpu)
-    test_data2 = SimpleTextDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    train_data = SimpleTextDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    test_data = SimpleTextDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
+    #train_data = SynthTextDataset(validation=False, max_length=OUTPUT_NUM, device=args.gpu)
+    #test_data = SynthTextDataset(validation=True, max_length=OUTPUT_NUM, device=args.gpu)
+    #test_data2 = SimpleTextDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
 
     train_iter = iterators.SerialIterator(train_data, batch_size=50, shuffle=True)
     test_iter = iterators.SerialIterator(test_data, batch_size=50, repeat=False, shuffle=False)
-    test_iter2 = iterators.SerialIterator(test_data2, batch_size=50, repeat=False, shuffle=False)
+    #test_iter2 = iterators.SerialIterator(test_data2, batch_size=50, repeat=False, shuffle=False)
 
 
 base_cnn = CNN()
@@ -141,7 +141,8 @@ for i in range(0, OUTPUT_NUM):
 
 updater = WordRecogUpdater(train_iter, base_cnn, classifiers, base_cnn_optimizer, cl_optimizers, converter=convert.concat_examples, device=args.gpu)
 trainer = training.Trainer(updater, (80, 'epoch'), out=args.output)
-trainer.extend(WordRecogEvaluator([test_iter, test_iter2], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
+trainer.extend(WordRecogEvaluator([test_iter], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
+#trainer.extend(WordRecogEvaluator([test_iter, test_iter2], base_cnn, classifiers, converter=convert.concat_examples, device=args.gpu))
 
 trainer.extend(decay_lr(decay_rate=0.98))
 trainer.extend(extensions.LogReport())
