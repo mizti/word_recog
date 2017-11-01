@@ -22,21 +22,21 @@ data = {
 #    'synth/levenstein_distance': "o",
 #    'simple/avg_loss': "s",
 #    'synth/avg_loss': "+",
-    'myval/0/loss': "h",
-    'myval/3/loss': "H",
-    'myval/6/loss': "H",
-    'myval/8/loss': "8",
-    'myval/0/accuracy': "h",
-    'myval/3/accuracy': "H",
-    'myval/6/accuracy': "H",
-    'myval/8/accuracy': "8"
-#    '0/loss': "2",
-#    '1/loss': "3",
-#    '2/loss': "x",
-#    '4/loss': "p",
-#    '5/loss': "v",
-#    '10/loss': ">",
-#    '19/loss': "1"
+#    'myval/0/loss': "h",
+#    'myval/3/loss': "H",
+#    'myval/6/loss': "H",
+#    'myval/8/loss': "8",
+#    'myval/0/accuracy': "h",
+#    'myval/3/accuracy': "H",
+#    'myval/6/accuracy': "H",
+#    'myval/8/accuracy': "8",
+    '0/loss': "2",
+    '1/loss': "3",
+    '2/loss': "x",
+    '4/loss': "p",
+    '5/loss': "v",
+    '10/loss': ">",
+    '19/loss': "1"
 }
 
 for name in logfile:

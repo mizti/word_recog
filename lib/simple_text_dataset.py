@@ -118,7 +118,8 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
 
         #size   
         text_w, text_h = font.getsize(text)
-        text_x, text_y = 0, 0
+        #text_x, text_y = 0, 0
+        text_x, text_y = random.randint(-5,5), random.randint(-5,5)
         w, h = text_w, 32 #fixed
 
         background_color, text_color = self.get_colors(min_offset=150)
