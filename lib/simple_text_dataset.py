@@ -143,8 +143,7 @@ class SimpleTextDataset(chainer.dataset.DatasetMixin):
 
         
         image_array = image_array / 255
-        #if self._normalize:
-            # TBD: minus avg of image_array 
+        image_array = image_array - image_array.mean()
         
         if self._flatten:
             image_array = image_array.flatten()
@@ -165,4 +164,5 @@ if __name__ == '__main__':
     for i in range(len(train_data)):
         print(" ")
         image_array, label = train_data.get_example(i)
-        print(label)
+        print(label.__class__)
+        print(image_array.__class__)

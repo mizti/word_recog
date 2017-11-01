@@ -16,8 +16,9 @@ from lib.utils import *
 
 class WordRecogEvaluator(extensions.Evaluator):
     default_name='myval'
-    def __init__(self, iterator_list, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None):
-        iterators = {'synth': iterator_list[0], 'simple': iterator_list[1]}
+    def __init__(self, iterator_list, base_cnn, classifiers, converter=convert.concat_examples, device=None, eval_hook=None, eval_func=None, debug=False):
+        #iterators = {'synth': iterator_list[0], 'simple': iterator_list[1]}
+        iterators = {'simple': iterator_list[0]}
         self._iterators = iterators
         self.base_cnn = base_cnn
         self._targets = {} 
@@ -28,6 +29,7 @@ class WordRecogEvaluator(extensions.Evaluator):
         self.device = device
         self.eval_hook = eval_hook
         self.eval_func = eval_func
+        self.debug = debug
         self.xp = np if int(self.device) == -1 else cuda.cupy
 
     def evaluate(self):
@@ -70,6 +72,9 @@ class WordRecogEvaluator(extensions.Evaluator):
                             recoged = label_to_text(map(lambda x:x.data[i].argmax(), predicted_words))
                             label = label_to_text(in_arrays[1][i])
                             l_distance = distance.levenshtein(recoged, label)
+                            if self.debug:
+                                print("label word: " + label)
+                                print("recog word: " + recoged)
                             summary.add({itr_name + '/levenstein_distance': float(l_distance)})
     
                 summary.add(observation)
