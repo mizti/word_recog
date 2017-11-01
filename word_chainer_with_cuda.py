@@ -107,7 +107,7 @@ if args.debug:
     test_iter2 = iterators.SerialIterator(test_data2, batch_size=20, repeat=False, shuffle=False)
 
 else:
-    train_data = SimpleTextDataset(1000000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
+    train_data = SimpleTextDataset(100000, max_length=OUTPUT_NUM, train=True, device=args.gpu)
     test_data = SimpleTextDataset(10000, max_length=OUTPUT_NUM, train=False, device=args.gpu)
     #train_data = SynthTextDataset(validation=False, max_length=OUTPUT_NUM, device=args.gpu)
     #test_data = SynthTextDataset(validation=True, max_length=OUTPUT_NUM, device=args.gpu)
